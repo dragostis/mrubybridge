@@ -14,7 +14,7 @@
 JNIEnv* jenv;
 
 mrb_value pointerToFloat(mrb_state* mrb, long pointer) {
-    return mrb_float_value(mrb, (mrb_float) pointer);;
+    return mrb_float_value(mrb, (mrb_float) pointer);
 }
 
 long floatToPointer(mrb_state* mrb, mrb_value flt) {
