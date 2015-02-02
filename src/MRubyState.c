@@ -1,0 +1,781 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include <jni.h>
+
+#include <mruby.h>
+#include <mruby/array.h>
+#include <mruby/class.h>
+#include <mruby/compile.h>
+#include <mruby/string.h>
+
+#include "MRubyState.h"
+
+JNIEnv* jenv;
+
+mrb_value pointerToFloat(mrb_state* mrb, long pointer) {
+    return mrb_float_value(mrb, (mrb_float) pointer);;
+}
+
+long floatToPointer(mrb_state* mrb, mrb_value flt) {
+    return mrb_float(flt);
+}
+
+char* copyString(const char* string) {
+    return strcat("", string);
+}
+
+jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
+    jarray result;
+    mrb_int i;
+    mrb_int len = mrb_ary_len(mrb, arg);
+
+    if (signature[0] == 'Z') {
+        result = (*jenv)->NewBooleanArray(jenv, len);
+
+        jboolean array[len];
+
+        for (i = 0; i < len; i++) {
+            if (mrb_type(mrb_ary_ref(mrb, arg, i)) == MRB_TT_TRUE) {
+                array[i] = (jboolean) 1;
+            } else {
+                array[i] = (jboolean) 0;
+            }
+        }
+
+        (*jenv)->SetBooleanArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'B') {
+        result = (*jenv)->NewByteArray(jenv, len);
+
+        jbyte array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jbyte) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetByteArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'C') {
+        result = (*jenv)->NewCharArray(jenv, len);
+
+        jchar array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jchar) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetCharArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'S') {
+        result = (*jenv)->NewShortArray(jenv, len);
+
+        jshort array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jshort) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetShortArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'I') {
+        result = (*jenv)->NewIntArray(jenv, len);
+
+        jint array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jint) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetIntArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'J') {
+        result = (*jenv)->NewLongArray(jenv, len);
+
+        jlong array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jlong) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetLongArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'F') {
+        result = (*jenv)->NewFloatArray(jenv, len);
+
+        jfloat array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jfloat) mrb_float(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetFloatArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'D') {
+        result = (*jenv)->NewDoubleArray(jenv, len);
+
+        jdouble array[len];
+
+        for (i = 0; i < len; i++) {
+            array[i] = (jdouble) mrb_float(mrb_ary_ref(mrb, arg, i));
+        }
+
+        (*jenv)->SetDoubleArrayRegion(jenv, result, 0, len, array);
+    } else if (signature[0] == 'L') {
+        char* className;
+        int stringLen;
+
+        className = (char*) malloc((stringLen = strstr(signature, ";") - signature));
+        memcpy(className, signature + 1, stringLen - 1);
+        className[stringLen] = '\0';
+
+        jclass arrayClass = (*jenv)->FindClass(jenv, className);
+
+        result = (*jenv)->NewObjectArray(jenv, len, arrayClass, NULL);
+
+        jboolean string = strstr(signature, "Ljava/lang/String") != NULL;
+
+        for (i = 0; i < len; i++) {
+            jobject object;
+
+            if (string) {
+                object = (*jenv)->NewStringUTF(jenv, mrb_string_value_ptr(mrb, mrb_ary_ref(mrb, arg, i)));
+            } else {
+                mrb_value pointerString = mrb_ary_ref(mrb, arg, i);
+
+                object = (jobject) floatToPointer(mrb, pointerString);
+            }
+
+            (*jenv)->SetObjectArrayElement(jenv, result, i, object);
+        }
+    }
+
+    return result;
+}
+
+jvalue getJavaArg(mrb_state* mrb, char** signature, mrb_value arg) {
+    jvalue result;
+    int nextIndex = 1;
+
+    switch ((*signature)[0]) {
+        case 'Z':
+            if (mrb_type(arg) == MRB_TT_TRUE) {
+                result.z = (jboolean) 1;
+            } else {
+                result.z = (jboolean) 0;
+            }
+
+            break;
+        case 'B':
+            result.b = (jbyte) mrb_fixnum(arg);
+
+            break;
+        case 'C':
+            result.c = (jchar) mrb_fixnum(arg);
+
+            break;
+        case 'S':
+            result.s = (jshort) mrb_fixnum(arg);
+
+            break;
+        case 'I':
+            result.i = (jint) mrb_fixnum(arg);
+
+            break;
+        case 'J':
+            result.j = (jlong) mrb_fixnum(arg);
+
+            break;
+        case 'F':
+            result.f = (jfloat) mrb_float(arg);
+
+            break;
+        case 'D':
+            result.d = (jdouble) mrb_float(arg);
+
+            break;
+        case '[':
+            result.l = (jobject) getArray(mrb, *signature + 1, arg);
+
+            char* semiColon = strstr(*signature, ";");
+
+            if (semiColon) {
+                nextIndex += semiColon - (*signature);
+            }
+
+            break;
+        case 'L':
+            if (strstr(*signature, "Ljava/lang/String") != NULL) {
+                result.l = (*jenv)->NewStringUTF(jenv, mrb_string_value_ptr(mrb, arg));
+            } else {
+                result.l = (jobject) floatToPointer(mrb, arg);
+            }
+
+            nextIndex += strstr(*signature, ";") - (*signature);
+
+            break;
+    }
+
+    *signature += nextIndex;
+
+    return result;
+}
+
+char* getRubyClass(char* javaClass) {
+    int dotIndex = -1;
+    char* string = javaClass;
+
+    while ((string = strstr(javaClass, ".")) != NULL) {
+        javaClass = string + 1;
+    }
+
+    char* result = (char*) malloc(strlen(javaClass));
+    strcpy(result, javaClass);
+
+    int len = strlen(result);
+
+    if (result[len - 1] == ';') result[len - 1] = '\0';
+
+    return result;
+}
+
+mrb_value allocate(mrb_state* mrb, char* rubyClass) {
+    struct RClass* c = mrb_class_get(mrb, rubyClass);
+    enum mrb_vtype type = MRB_TT_OBJECT;
+
+    struct RObject* o = (struct RObject*) mrb_obj_alloc(mrb, type, c);
+    o->c = c;
+
+    return mrb_obj_value(o);
+}
+
+mrb_value getRubyArray(mrb_state* mrb, char* signature, jarray array) {
+    jint i;
+    jsize len = (*jenv)->GetArrayLength(jenv, array);
+    mrb_value result = mrb_ary_new_capa(mrb, (mrb_int) len);
+
+    if (signature[0] == 'Z') {
+        jboolean* booleans = (*jenv)->GetBooleanArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            if (booleans[i]) {
+                mrb_ary_set(mrb, result, (mrb_int) i, mrb_true_value());
+            } else {
+                mrb_ary_set(mrb, result, (mrb_int) i, mrb_false_value());
+            }
+        }
+    } else if (signature[0] == 'B') {
+        jbyte* bytes = (*jenv)->GetByteArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_fixnum_value((mrb_int) bytes[i]));
+        }
+    } else if (signature[0] == 'C') {
+        jchar* chars = (*jenv)->GetCharArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_fixnum_value((mrb_int) chars[i]));
+        }
+    } else if (signature[0] == 'S') {
+        jshort* shorts = (*jenv)->GetShortArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_fixnum_value((mrb_int) shorts[i]));
+        }
+    } else if (signature[0] == 'I') {
+        jint* ints = (*jenv)->GetIntArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_fixnum_value((mrb_int) ints[i]));
+        }
+    } else if (signature[0] == 'J') {
+        jlong* longs = (*jenv)->GetLongArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_fixnum_value((mrb_int) longs[i]));
+        }
+    } else if (signature[0] == 'F') {
+        jfloat* floats = (*jenv)->GetFloatArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_float_value(mrb, (mrb_float) floats[i]));
+        }
+    } else if (signature[0] == 'D') {
+        jdouble* doubles = (*jenv)->GetDoubleArrayElements(jenv, array, 0);
+
+        for (i = 0; i < len; i++) {
+            mrb_ary_set(mrb, result, (mrb_int) i, mrb_float_value(mrb, (mrb_float) doubles[i]));
+        }
+    } else if (signature[0] == 'L') {
+        for (i = 0; i < len; i++) {
+            mrb_value object;
+
+            if (strstr(signature, "Ljava/lang/String") != NULL) {
+                jobject javaObject = (*jenv)->GetObjectArrayElement(jenv, array, i);
+
+                const char* string = (*jenv)->GetStringUTFChars(jenv, javaObject, NULL);
+
+                object = mrb_str_new_cstr(mrb, string);
+            } else {
+                object = allocate(mrb, getRubyClass(signature + 1));
+
+                jobject javaObject = (*jenv)->GetObjectArrayElement(jenv, array, i);
+
+                mrb_value pointer = pointerToFloat(mrb, (long) javaObject);
+
+                mrb_funcall_argv(mrb, object, mrb_intern_lit(mrb, "pointer="), 1, &pointer);
+            }
+
+            mrb_ary_set(mrb, result, (mrb_int) i, object);
+        }
+    }
+
+    return result;
+}
+
+mrb_value getRubyReturn(mrb_state* mrb, mrb_value self, char* signature, char* className, jmethodID methodID,
+        jobject thisObject, jvalue* args) {
+    mrb_value result;
+
+    if (signature[0] == '\0') {
+        jclass javaClass = (*jenv)->FindClass(jenv, className);
+        jobject javaObject = (*jenv)->NewObjectA(jenv, javaClass, methodID, args);
+
+        result = pointerToFloat(mrb, (long) javaObject);
+    } else {
+        if (signature[0] == 'V') {
+            (*jenv)->CallVoidMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_nil_value();
+        } else if (signature[0] == 'Z') {
+            jboolean boolean = (*jenv)->CallBooleanMethodA(jenv, thisObject, methodID, args);
+
+            if (boolean) {
+                result = mrb_true_value();
+            } else {
+                result = mrb_false_value();
+            }
+        } else if (signature[0] == 'B') {
+            jbyte byte = (*jenv)->CallByteMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_fixnum_value((mrb_int) byte);
+        } else if (signature[0] == 'C') {
+            jchar chr = (*jenv)->CallCharMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_fixnum_value((mrb_int) chr);
+        } else if (signature[0] == 'S') {
+            jshort shrt = (*jenv)->CallShortMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_fixnum_value((mrb_int) shrt);
+        } else if (signature[0] == 'I') {
+            jint in = (*jenv)->CallIntMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_fixnum_value((mrb_int) in);
+        } else if (signature[0] == 'J') {
+            jlong lng = (*jenv)->CallLongMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_fixnum_value((mrb_int) lng);
+        } else if (signature[0] == 'F') {
+            jfloat flt = (*jenv)->CallFloatMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_float_value(mrb, (mrb_float) flt);
+        } else if (signature[0] == 'D') {
+            jdouble dbl = (*jenv)->CallDoubleMethodA(jenv, thisObject, methodID, args);
+
+            result = mrb_float_value(mrb, (mrb_float) dbl);
+        } else if (signature[0] == '[') {
+            jarray array = (jarray) (*jenv)->CallObjectMethodA(jenv, thisObject, methodID, args);
+
+            result = getRubyArray(mrb, signature + 1, array);
+        } else if (signature[0] == 'L') {
+            if (strstr(signature, "Ljava/lang/String") != NULL) {
+                jstring str = (jstring) (*jenv)->CallObjectMethodA(jenv, thisObject, methodID, args);
+
+                const char* string = (*jenv)->GetStringUTFChars(jenv, str, NULL);
+
+                result = mrb_str_new_cstr(mrb, string);
+            } else {
+                mrb_value object = allocate(mrb, getRubyClass(signature + 1));
+
+                jobject javaObject = (*jenv)->CallObjectMethodA(jenv, thisObject, methodID, args);
+
+                mrb_value pointer = pointerToFloat(mrb, (long) javaObject);
+
+                mrb_funcall_argv(mrb, object, mrb_intern_lit(mrb, "pointer="), 1, &pointer);
+
+                result = object;
+            }
+        }
+    }
+
+    return result;
+}
+
+mrb_value getRubyStaticReturn(mrb_state* mrb, mrb_value self, char* signature, char* className, jmethodID methodID,
+        jvalue* args) {
+    mrb_value result;
+
+    jclass javaClass = (*jenv)->FindClass(jenv, className);
+
+    if (signature[0] == 'V') {
+        (*jenv)->CallStaticVoidMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_nil_value();
+    } else if (signature[0] == 'Z') {
+        jboolean boolean = (*jenv)->CallStaticBooleanMethodA(jenv, javaClass, methodID, args);
+
+        if (boolean) {
+            result = mrb_true_value();
+        } else {
+            result = mrb_false_value();
+        }
+    } else if (signature[0] == 'B') {
+        jbyte byte = (*jenv)->CallStaticByteMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_fixnum_value((mrb_int) byte);
+    } else if (signature[0] == 'C') {
+        jchar chr = (*jenv)->CallStaticCharMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_fixnum_value((mrb_int) chr);
+    } else if (signature[0] == 'S') {
+        jshort shrt = (*jenv)->CallStaticShortMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_fixnum_value((mrb_int) shrt);
+    } else if (signature[0] == 'I') {
+        jint in = (*jenv)->CallStaticIntMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_fixnum_value((mrb_int) in);
+    } else if (signature[0] == 'J') {
+        jlong lng = (*jenv)->CallStaticLongMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_fixnum_value((mrb_int) lng);
+    } else if (signature[0] == 'F') {
+        jfloat flt = (*jenv)->CallStaticFloatMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_float_value(mrb, (mrb_float) flt);
+    } else if (signature[0] == 'D') {
+        jdouble dbl = (*jenv)->CallStaticDoubleMethodA(jenv, javaClass, methodID, args);
+
+        result = mrb_float_value(mrb, (mrb_float) dbl);
+    } else if (signature[0] == '[') {
+        jarray array = (jarray) (*jenv)->CallStaticObjectMethodA(jenv, javaClass, methodID, args);
+
+        result = getRubyArray(mrb, signature + 1, array);
+    } else if (signature[0] == 'L') {
+        if (strstr(signature, "Ljava/lang/String") != NULL) {
+            jstring str = (jstring) (*jenv)->CallStaticObjectMethodA(jenv, javaClass, methodID, args);
+
+            const char* string = (*jenv)->GetStringUTFChars(jenv, str, NULL);
+
+            result = mrb_str_new_cstr(mrb, string);
+        } else {
+            mrb_value object = allocate(mrb, getRubyClass(signature + 1));
+
+            jobject javaObject = (*jenv)->CallStaticObjectMethodA(jenv, javaClass, methodID, args);
+
+            mrb_value pointer = pointerToFloat(mrb, (long) javaObject);
+
+            mrb_funcall_argv(mrb, object, mrb_intern_lit(mrb, "pointer="), 1, &pointer);
+
+            result = object;
+        }
+    }
+
+    return result;
+}
+
+mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* args;
+    mrb_int len;
+
+    mrb_get_args(mrb, "*", &args, &len);
+
+    jmethodID methodID = (jmethodID) floatToPointer(mrb, args[0]);
+
+    jobject thisObject = (jobject) floatToPointer(mrb, args[1]);
+
+    char* signatureString = copyString(mrb_string_value_ptr(mrb, args[2])) + 1;
+    char** signature = &signatureString;
+
+    char* className = copyString(mrb_string_value_ptr(mrb, args[3]));
+
+    jvalue javaArgs[len - 4];
+    int i = 4;
+
+    while ((*signature)[0] != ')') {
+        javaArgs[i - 4] = getJavaArg(mrb, signature, args[i]);
+
+        i++;
+    }
+
+    return getRubyReturn(mrb, self, (*signature) + 1, className, methodID, thisObject, javaArgs);
+}
+
+mrb_value call_static(mrb_state* mrb, mrb_value self) {
+    mrb_value* args;
+    mrb_int len;
+
+    mrb_get_args(mrb, "*", &args, &len);
+
+    jmethodID methodID = (jmethodID) floatToPointer(mrb, args[0]);
+
+    char* signatureString = copyString(mrb_string_value_ptr(mrb, args[1])) + 1;
+    char** signature = &signatureString;
+
+    char* className = copyString(mrb_string_value_ptr(mrb, args[2]));
+
+    jvalue javaArgs[len - 3];
+    int i = 3;
+
+    while ((*signature)[0] != ')') {
+        javaArgs[i - 3] = getJavaArg(mrb, signature, args[i]);
+
+        i++;
+    }
+
+    return getRubyStaticReturn(mrb, self, (*signature) + 1, className, methodID, javaArgs);
+}
+
+void throwRuntimeException(JNIEnv* env, const char* message) {
+    jclass exceptionClass = (*env)->FindClass(env, "java/lang/RuntimeException");
+
+    (*env)->ThrowNew(env, exceptionClass, message);
+}
+
+
+JNIEXPORT jlong JNICALL Java_MRubyState_getStatePointer(JNIEnv* env,
+        jobject thisObject) {
+    jenv = env;
+    mrb_state* mrb = mrb_open();
+
+    const char* defineJavaClass = "module Boolean; end\n"
+                                  "\n"
+                                  "class TrueClass; include Boolean; end\n"
+                                  "class FalseClass; include Boolean; end\n"
+                                  "\n"
+                                  "class JavaMethod\n"
+                                  "  def initialize(pointer, name, signature, java_class)\n"
+                                  "    @pointer = pointer\n"
+                                  "    @name = name\n"
+                                  "    @signature = signature.clone\n"
+                                  "    @java_class = java_class\n"
+                                  "\n"
+                                  "    @signature.chop! if name == :construct\n"
+                                  "\n"
+                                  "    @types = get_types signature\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def get_types(signature)\n"
+                                  "    types = []\n"
+                                  "\n"
+                                  "    signature = signature[1..-1]\n"
+                                  "\n"
+                                  "    array = false\n"
+                                  "\n"
+                                  "    while signature.index ')'\n"
+                                  "      type = signature[0]\n"
+                                  "\n"
+                                  "      next_index = 1\n"
+                                  "\n"
+                                  "      case type\n"
+                                  "      when 'Z'\n"
+                                  "        types << Boolean unless array\n"
+                                  "      when 'C', 'B', 'S', 'I', 'J'\n"
+                                  "        types << Fixnum unless array\n"
+                                  "      when 'F', 'D'\n"
+                                  "        types << Float unless array\n"
+                                  "      when '['\n"
+                                  "        types << Array\n"
+                                  "\n"
+                                  "        array = true\n"
+                                  "      when 'L'\n"
+                                  "        last_index = signature.index ';'\n"
+                                  "\n"
+                                  "        types << get_class(signature[1..(last_index - 1)]) unless array\n"
+                                  "\n"
+                                  "        next_index = last_index + 1\n"
+                                  "      end\n"
+                                  "\n"
+                                  "      array = false unless type == '['\n"
+                                  "\n"
+                                  "      signature = signature[next_index..-1]\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    types\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def get_class(java_class)\n"
+                                  "    class_name = java_class.split('.').last\n"
+                                  "\n"
+                                  "    return String if class_name == 'java/lang/String'\n"
+                                  "    return JavaClass if class_name == 'java/lang/Object'\n"
+                                  "\n"
+                                  "    Kernel.const_get class_name\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def matches?(args)\n"
+                                  "    return true if @types.empty? && args.empty?\n"
+                                  "    return false unless @types.length == args.length\n"
+                                  "\n"
+                                  "    @types && (0...(@types.length)).map { |i| args[i].kind_of? @types[i] }.inject(:&)\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def call(args, object=nil)\n"
+                                  "    if object\n"
+                                  "      JavaMethod.java_call(@pointer, object.pointer, @signature, @java_class, *(get_value args))\n"
+                                  "    else\n"
+                                  "      JavaMethod.java_call_static(@pointer, @signature, @java_class, *(get_value args))\n"
+                                  "    end\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def get_value(arg)\n"
+                                  "    return arg.map { |a| get_value a } if arg.kind_of? Array\n"
+                                  "\n"
+                                  "    arg.kind_of?(JavaClass) ? arg.pointer : arg\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  private :get_types, :get_class\n"
+                                  "end\n"
+                                  "\n"
+                                  "class JavaClass\n"
+                                  "  attr_accessor :pointer\n"
+                                  "  attr_reader :name\n"
+                                  "\n"
+                                  "  def initialize(*args)\n"
+                                  "    @pointer = construct(*args)\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  def method_missing(name, *args)\n"
+                                  "    return super unless method = self.class.match_instance_method(name, args)\n"
+                                  "\n"
+                                  "    method.call(args, self)\n"
+                                  "  end\n"
+                                  "\n"
+                                  "  class << self\n"
+                                  "    attr_accessor :java_class\n"
+                                  "\n"
+                                  "    def instance_methods\n"
+                                  "      @instance_methods ||= {}\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def class_methods\n"
+                                  "      @class_methods ||= {}\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def set_instance_method(pointer, name, signature)\n"
+                                  "      name = name.to_sym\n"
+                                  "\n"
+                                  "      unless instance_methods[name].nil?\n"
+                                  "        instance_methods[name] << JavaMethod.new(pointer, name, signature, java_class)\n"
+                                  "      else\n"
+                                  "        instance_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]\n"
+                                  "      end\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def set_class_method(pointer, name, signature)\n"
+                                  "      name = name.to_sym\n"
+                                  "\n"
+                                  "      unless class_methods[name].nil?\n"
+                                  "        class_methods[name] << JavaMethod.new(pointer, name, signature, java_class)\n"
+                                  "      else\n"
+                                  "        class_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]\n"
+                                  "      end\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def method_missing(name, *args)\n"
+                                  "      return super unless method = match_class_method(name, args)\n"
+                                  "\n"
+                                  "      method.call(args)\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def match_instance_method(name, args)\n"
+                                  "      instance_methods[name] && instance_methods[name].select { |method| method.matches?(args) }.first\n"
+                                  "    end\n"
+                                  "\n"
+                                  "    def match_class_method(name, args)\n"
+                                  "      class_methods[name] && class_methods[name].select { |method| method.matches?(args) }.first\n"
+                                  "    end\n"
+                                  "  end\n"
+                                  "end";
+
+    mrb_load_string(mrb, defineJavaClass);
+
+    struct RClass* javaMethod = mrb_class_get(mrb, "JavaMethod");
+
+    mrb_define_class_method(mrb, javaMethod, "java_call", call, MRB_ARGS_ANY());
+    mrb_define_class_method(mrb, javaMethod, "java_call_static", call_static, MRB_ARGS_ANY());
+
+    return (jlong) mrb;
+}
+
+JNIEXPORT void JNICALL Java_MRubyState_loadClassToState(JNIEnv* env, jobject thisObject, jlong mRubyState,
+        jstring javaName, jstring rubyName) {
+    mrb_state* mrb = (mrb_state*) mRubyState;
+
+    const char* javaNameString = (*env)->GetStringUTFChars(env, javaName, NULL);
+    const char* rubyNameString = (*env)->GetStringUTFChars(env, rubyName, NULL);
+
+    struct RClass* javaClass = mrb_class_get(mrb, "JavaClass");
+    struct RClass* rubyClass = mrb_define_class(mrb, rubyNameString, javaClass);
+
+    mrb_value string = mrb_str_new_cstr(mrb, javaNameString);
+
+    mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "java_class="), 1, &string);
+}
+
+JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobject thisObject, jlong mRubyState,
+        jstring className, jstring rubyClassName, jobjectArray javaNames, jobjectArray rubyNames,
+        jobjectArray javaSignatures, jbooleanArray isStatic) {
+    mrb_state* mrb = (mrb_state*) mRubyState;
+    const char* classNameString = (*env)->GetStringUTFChars(env, className, NULL);
+    const char* rubyClassNameString = (*env)->GetStringUTFChars(env, rubyClassName, NULL);
+
+    struct RClass* rubyClass = mrb_class_get(mrb, rubyClassNameString);
+
+    jclass thisClass = (*env)->FindClass(env, classNameString);
+    jboolean* isStaticArray = (*env)->GetBooleanArrayElements(env, isStatic, NULL);
+
+    jsize length = (*env)->GetArrayLength(env, javaNames);
+
+    int i;
+
+    for (i = 0; i < length; i++) {
+        const char* javaName = (*env)->GetStringUTFChars(env,
+                (jstring) (*env)->GetObjectArrayElement(env, javaNames, i), NULL);
+        const char* rubyName = (*env)->GetStringUTFChars(env,
+                (jstring) (*env)->GetObjectArrayElement(env, rubyNames, i), NULL);
+        const char* signature = (*env)->GetStringUTFChars(env,
+                (jstring) (*env)->GetObjectArrayElement(env, javaSignatures, i), NULL);
+
+        jmethodID methodPointer;
+
+        if (!isStaticArray[i]) {
+            methodPointer = (*env)->GetMethodID(env, thisClass, javaName, signature);
+        } else {
+            methodPointer = (*env)->GetStaticMethodID(env, thisClass, javaName, signature);
+        }
+
+        mrb_value* args = (mrb_value*) malloc(sizeof(mrb_value) * 3);
+
+        args[0] = pointerToFloat(mrb, (long) methodPointer);
+        args[1] = mrb_str_new_cstr(mrb, rubyName);
+        args[2] = mrb_str_new_cstr(mrb, signature);
+
+        if (!isStaticArray[i]) {
+            mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "set_instance_method"), 3, args);
+        } else {
+            mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "set_class_method"), 3, args);
+        }
+    }
+}
+
+JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObject, jlong mRubyState, jstring string,
+        jstring fileName) {
+    mrb_state* mrb = (mrb_state*) mRubyState;
+    mrbc_context* context = mrbc_context_new(mrb);
+
+    mrbc_filename(mrb, context, (*env)->GetStringUTFChars(env, fileName, NULL));
+
+    const char* mrubyString = (*env)->GetStringUTFChars(env, string, NULL);
+
+    mrb_load_string_cxt(mrb, mrubyString, context);
+
+    if (mrb->exc != NULL) {
+        mrb_value message = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "inspect", 0);
+
+        throwRuntimeException(env, mrb_string_value_ptr(mrb, message));
+    }
+}
