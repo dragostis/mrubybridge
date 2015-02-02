@@ -21,10 +21,6 @@ long floatToPointer(mrb_state* mrb, mrb_value flt) {
     return mrb_float(flt);
 }
 
-char* copyString(const char* string) {
-    return strcat("", string);
-}
-
 jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
     jarray result;
     mrb_int i;
@@ -487,10 +483,10 @@ mrb_value call(mrb_state* mrb, mrb_value self) {
 
     jobject thisObject = (jobject) floatToPointer(mrb, args[1]);
 
-    char* signatureString = copyString(mrb_string_value_ptr(mrb, args[2])) + 1;
+    char* signatureString = (char*) mrb_string_value_ptr(mrb, args[2]) + 1;
     char** signature = &signatureString;
 
-    char* className = copyString(mrb_string_value_ptr(mrb, args[3]));
+    char* className = (char*) mrb_string_value_ptr(mrb, args[3]);
 
     jvalue javaArgs[len - 4];
     int i = 4;
@@ -512,10 +508,10 @@ mrb_value call_static(mrb_state* mrb, mrb_value self) {
 
     jmethodID methodID = (jmethodID) floatToPointer(mrb, args[0]);
 
-    char* signatureString = copyString(mrb_string_value_ptr(mrb, args[1])) + 1;
+    char* signatureString = (char*) mrb_string_value_ptr(mrb, args[1]) + 1;
     char** signature = &signatureString;
 
-    char* className = copyString(mrb_string_value_ptr(mrb, args[2]));
+    char* className = (char*) mrb_string_value_ptr(mrb, args[2]);
 
     jvalue javaArgs[len - 3];
     int i = 3;
