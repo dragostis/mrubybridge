@@ -78,10 +78,6 @@ public class MRubyState {
         javaName = javaName.replaceAll("multiply", "*");
         javaName = javaName.replaceAll("divide", "/");
 
-        javaName = javaName.replaceAll("equals", "==");
-
-        javaName = javaName.replaceAll("toString", "to_s");
-
         return javaName.replaceAll("([A-Z])", "_$1").toLowerCase();
     }
 
