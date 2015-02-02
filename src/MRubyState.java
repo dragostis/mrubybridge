@@ -39,10 +39,12 @@ public class MRubyState {
             publicMethods = filterObjectMethods(aClass.getMethods());
             constructors = aClass.getConstructors();
 
-            String[] javaNames = new String[publicMethods.length + constructors.length];
-            String[] rubyNames = new String[publicMethods.length + constructors.length];
-            String[] javaSignatures = new String[publicMethods.length + constructors.length];
-            boolean[] isStatic = new boolean[publicMethods.length + constructors.length];
+            int length = publicMethods.length + constructors.length;
+
+            String[] javaNames = new String[length];
+            String[] rubyNames = new String[length];
+            String[] javaSignatures = new String[length];
+            boolean[] isStatic = new boolean[length];
 
             for (int i = 0; i < constructors.length; i++) {
                 javaNames[i] = "<init>";
@@ -52,10 +54,12 @@ public class MRubyState {
             }
 
             for (int i = 0; i < publicMethods.length; i++) {
-                javaNames[i + constructors.length] = publicMethods[i].getName();
-                rubyNames[i + constructors.length] = getRubyName(javaNames[i + constructors.length]);
-                javaSignatures[i + constructors.length] = getSignature(publicMethods[i]);
-                isStatic[i + constructors.length] = Modifier.isStatic(publicMethods[i].getModifiers());
+                int j = i + constructors.length;
+
+                javaNames[j] = publicMethods[i].getName();
+                rubyNames[j] = getRubyName(javaNames[j]);
+                javaSignatures[j] = getSignature(publicMethods[i]);
+                isStatic[j] = Modifier.isStatic(publicMethods[i].getModifiers());
             }
 
             loadClassMethodsToState(pointer, aClass.getCanonicalName(), aClass.getName(), javaNames, rubyNames,
