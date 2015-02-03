@@ -6,4 +6,4 @@ An mruby bridge that lets you load Java classes and call their methods.
 * mruby 1.1
 
 ## Compilation
-`gcc -I/path/to/java/library -lmruby -shared -o libmrubystate.so MRubyState.c`
+`gcc -I/path/to/java/library -lmruby -fPIC -shared -o libmrubystate.so MRubyState.c`
