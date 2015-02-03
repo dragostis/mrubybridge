@@ -39,6 +39,14 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState
 JNIEXPORT void JNICALL Java_MRubyState_loadString
   (JNIEnv *, jobject, jlong, jstring, jstring);
 
+/*
+ * Class:     MRubyState
+ * Method:    close
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_MRubyState_close
+  (JNIEnv *, jobject, jlong);
+
 #ifdef __cplusplus
 }
 #endif

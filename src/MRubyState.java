@@ -25,6 +25,13 @@ public class MRubyState {
         Collections.addAll(toBeRemoved, Object.class.getMethods());
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+
+
+        super.finalize();
+    }
+
     public void loadClass(Class aClass) {
         classes.add(aClass);
 
@@ -180,4 +187,6 @@ public class MRubyState {
                                                 boolean[] isStatic);
 
     private native void loadString(long pointer, String mrubyString, String fileName);
+
+    private native void close();
 }

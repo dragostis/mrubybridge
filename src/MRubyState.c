@@ -775,3 +775,9 @@ JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObjec
         throwRuntimeException(env, mrb_string_value_ptr(mrb, message));
     }
 }
+
+JNIEXPORT void JNICALL Java_MRubyState_close(JNIEnv* env, jobject thisObject, jlong mRubyState) {
+    mrb_state* mrb = (mrb_state*) mRubyState;
+
+    mrb_close(mrb);
+}
