@@ -4,3 +4,4 @@
 *.jnilib
 *.so
 .DS_Store
+out/*
