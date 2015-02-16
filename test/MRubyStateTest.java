@@ -39,20 +39,10 @@ public class MRubyStateTest {
 
     @Test
     public void testExecute_errorHandling_incorrectFileSyntax() throws IOException {
-        try {
-            File file = loader.getFile("ruby/incorrect_syntax.rb");
-            state.executeFile(file);
-        } catch( RuntimeException e ) {
-            System.out.println("Testing >>");
-            System.out.print(e.getMessage());
-            System.out.println();
-        }
-    }
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("SyntaxError: line 2: syntax error, unexpected keyword_end, expecting $end");
 
-
-    @Test(expected=IOException.class)
-    public void testExecute_errorHandling_exception() throws IOException {
-        File file = loader.getFile("ruby/exception.rb");
+        File file = loader.getFile("ruby/incorrect_syntax.rb");
         state.executeFile(file);
     }
 }
