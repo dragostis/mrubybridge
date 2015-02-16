@@ -763,6 +763,8 @@ JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObjec
     mrb_state* mrb = (mrb_state*) mRubyState;
     mrbc_context* context = mrbc_context_new(mrb);
 
+    context->capture_errors = 1;
+
     mrbc_filename(mrb, context, (*env)->GetStringUTFChars(env, fileName, NULL));
 
     const char* mrubyString = (*env)->GetStringUTFChars(env, string, NULL);
