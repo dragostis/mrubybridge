@@ -38,11 +38,21 @@ public class MRubyStateTest {
 
 
     @Test
-    public void testExecute_errorHandling_incorrectFileSyntax() throws IOException {
+    public void testExecute_errorHandling_syntax() throws IOException {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("SyntaxError: line 2: syntax error, unexpected keyword_end, expecting $end");
 
-        File file = loader.getFile("ruby/incorrect_syntax.rb");
+        File file = loader.getFile("ruby/syntax_error.rb");
+        state.executeFile(file);
+    }
+
+
+    @Test
+    public void testExecute_errorHandling_type() throws IOException {
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("type_error.rb:1: non float value (TypeError)");
+
+        File file = loader.getFile("ruby/type_error.rb");
         state.executeFile(file);
     }
 }
