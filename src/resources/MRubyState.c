@@ -114,7 +114,7 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
         char* className;
         int stringLen;
 
-        className = (char*) malloc((stringLen = strstr(signature, ";") - signature));
+        className = malloc((stringLen = strstr(signature, ";") - signature));
         memcpy(className, signature + 1, stringLen - 1);
         className[stringLen] = '\0';
 
@@ -218,7 +218,7 @@ char* getRubyClass(char* javaClass) {
         javaClass = string + 1;
     }
 
-    char* result = (char*) malloc(strlen(javaClass));
+    char* result = malloc(strlen(javaClass) + 1);
     strcpy(result, javaClass);
 
     int len = strlen(result);
@@ -744,7 +744,7 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobj
             methodPointer = (*env)->GetStaticMethodID(env, thisClass, javaName, signature);
         }
 
-        mrb_value* args = (mrb_value*) malloc(sizeof(mrb_value) * 3);
+        mrb_value* args = malloc(sizeof(mrb_value) * 3);
 
         args[0] = pointerToFloat(mrb, (long) methodPointer);
         args[1] = mrb_str_new_cstr(mrb, rubyName);
