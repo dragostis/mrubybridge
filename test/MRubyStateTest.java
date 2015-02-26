@@ -24,12 +24,7 @@ public class MRubyStateTest {
 
     @After
     public void tearDown() {
-        // Finalize does not seem to work, null pointer exception
-        try {
-            state.finalize();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
+        state.close();
     }
 
     @Rule

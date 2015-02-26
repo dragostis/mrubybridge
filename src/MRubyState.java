@@ -3,6 +3,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class MRubyState {
         System.loadLibrary("mrubystate");
     }
 
-    private long pointer;
+    public long pointer;
     private List<Class> classes;
     private List<Method> toBeRemoved;
 
@@ -23,13 +24,6 @@ public class MRubyState {
         toBeRemoved = new ArrayList<Method>();
 
         Collections.addAll(toBeRemoved, Object.class.getMethods());
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-
-
-        super.finalize();
     }
 
     public void loadClass(Class aClass) {
@@ -72,6 +66,10 @@ public class MRubyState {
             loadClassMethodsToState(pointer, aClass.getCanonicalName(), aClass.getName(), javaNames, rubyNames,
                     javaSignatures, isStatic);
         }
+    }
+
+    public void close() {
+        close(pointer);
     }
 
     private String getRubyName(String javaName) {
@@ -188,5 +186,5 @@ public class MRubyState {
 
     private native void loadString(long pointer, String mrubyString, String fileName);
 
-    private native void close();
+    private native void close(long pointer);
 }
