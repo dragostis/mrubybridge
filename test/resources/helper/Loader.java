@@ -12,8 +12,7 @@ public class Loader {
     }
 
     public static Loader getInstance() {
-        if( instance == null )
-            instance = new Loader();
+        if (instance == null) instance = new Loader();
 
         return instance;
     }
