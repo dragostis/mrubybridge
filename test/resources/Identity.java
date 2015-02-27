@@ -1,9 +1,7 @@
 package resources;
 
 public class Identity {
-    public void map() {
-
-    }
+    public void map() {}
 
     public boolean map(boolean var) {
         return var;
@@ -85,9 +83,9 @@ public class Identity {
         return var;
     }
 
-    public static void mapStatic() {
 
-    }
+
+    public static void mapStatic() {}
 
     public static boolean mapStatic(boolean var) {
         return var;
