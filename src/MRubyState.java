@@ -63,7 +63,9 @@ public class MRubyState {
                 isStatic[j] = Modifier.isStatic(publicMethods[i].getModifiers());
             }
 
-            loadClassMethodsToState(pointer, aClass.getCanonicalName(), aClass.getName(), javaNames, rubyNames,
+            String rubyClass = aClass.getName().replaceAll("(\\w+\\.)*", "");
+
+            loadClassMethodsToState(pointer, aClass.getCanonicalName(), rubyClass, javaNames, rubyNames,
                     javaSignatures, isStatic);
         }
     }
