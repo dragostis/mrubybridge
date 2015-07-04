@@ -3,7 +3,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,7 +28,7 @@ public class MRubyState {
     public void loadClass(Class aClass) {
         classes.add(aClass);
 
-        loadClassToState(pointer, aClass.getCanonicalName(), aClass.getName());
+        loadClassToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass));
     }
 
     public void loadMethods() {
@@ -58,14 +57,12 @@ public class MRubyState {
                 int j = i + constructors.length;
 
                 javaNames[j] = publicMethods[i].getName();
-                rubyNames[j] = getRubyName(javaNames[j]);
+                rubyNames[j] = getRubyMethodName(javaNames[j]);
                 javaSignatures[j] = getSignature(publicMethods[i]);
                 isStatic[j] = Modifier.isStatic(publicMethods[i].getModifiers());
             }
 
-            String rubyClass = aClass.getName().replaceAll("(\\w+\\.)*", "");
-
-            loadClassMethodsToState(pointer, aClass.getCanonicalName(), rubyClass, javaNames, rubyNames,
+            loadClassMethodsToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass), javaNames, rubyNames,
                     javaSignatures, isStatic);
         }
     }
@@ -74,7 +71,15 @@ public class MRubyState {
         close(pointer);
     }
 
-    private String getRubyName(String javaName) {
+    private String getJavaClassName(Class aClass) {
+        return aClass.getCanonicalName().replaceAll("\\.", "/");
+    }
+
+    private String getRubyClassName(Class aClass) {
+        return aClass.getName().replaceAll("(\\w+\\.)*", "");
+    }
+
+    private String getRubyMethodName(String javaName) {
         javaName = javaName.replaceAll("get", "");
         if (javaName.matches("set.*")) javaName = javaName.substring(3) + '=';
 

@@ -215,7 +215,7 @@ char* getRubyClass(char* javaClass) {
     int dotIndex = -1;
     char* string = javaClass;
 
-    while ((string = strstr(javaClass, ".")) != NULL) {
+    while ((string = strstr(javaClass, "/")) != NULL) {
         javaClass = string + 1;
     }
 
