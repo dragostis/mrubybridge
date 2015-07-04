@@ -1,57 +1,64 @@
+def assert(left, right)
+  raise "#{left} != #{right}" unless left == right
+end
 
+identity = Identity.new
 values = [
-    false, true,
-    1, 256,
-    2, 2345,
-    'A', '#',
-    -12234, 233344,
-    -2331, 33322323,
-    23.2, -233.3,
-    -2333113.4, -223567433.323,
-    '', 'ASDFFAS',
-    Identity.new, nil
+  [true, "boolean"],
+  [126, "byte"],
+  [10234, "short"],
+  [10234, "char"],
+  [1234567890, "int"],
+  [1234567890, "long"],
+  [3.5, "float"],
+  [3.5, "double"],
+  ["foo", "string"]
 ]
 
-a_values = [
-    [false, true],
-    [1, 256],
-    [2, 2345],
-    ['A', '#'],
-    [-12234, 233344],
-    [-2331, 33322323],
-    [23.2, -233.3],
-    [-2333113.4, -223567433.323],
-    ['', 'ASDFFAS'],
-    [Identity.new, nil]
-]
+identity.map
 
+# mapping value
 
-#Since ruby does not have byte/short etc not sure how these functions map in java
-values.each do |element|
-    tester = Tester.new :map, element
-    tester.call
+values.each do |value, type|
+  assert identity.send("map_" + type, value), value
 end
 
+left = identity
+right = identity.map_object identity
 
-a_values.each do |array|
-    tester = Tester.new :map, array
-    tester.call
+raise "#{left} != #{right}" unless left.eql right
+
+# mapping [value]
+
+values.each do |value, type|
+  assert identity.send("map_" + type + "_array", [value]), [value]
 end
 
-tester = Tester.new :map, nil
-tester.void_call
+left = [identity]
+right = identity.map_object_array [identity]
 
+raise "#{left} != #{right}" unless left[0].eql right[0]
 
+Identity.map_static
 
-values.each do |element|
-    tester = Tester.new :map_static, element
-    tester.static_call void: false, static: true
+# mapping static value
+
+values.each do |value, type|
+  assert Identity.send("map_static_" + type, value), value
 end
 
-a_values.each do |array|
-    tester = Tester.new :map_static, array
-    tester.static_call void: false, static: true
+left = identity
+right = Identity.map_static_object identity
+
+raise "#{left} != #{right}" unless left.eql right
+
+# mapping static [value]
+
+values.each do |value, type|
+  assert Identity.send("map_static_" + type + "_array", [value]), [value]
 end
 
-tester = Tester.new :map_static, nil
-tester.static_void_call void:true, static: true
+left = [identity]
+right = Identity.map_static_object_array [identity]
+
+raise "#{left} != #{right}" unless left[0].eql right[0]

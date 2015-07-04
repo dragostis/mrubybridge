@@ -3,83 +3,83 @@ package resources;
 public class Identity {
     public void map() {}
 
-    public boolean map(boolean var) {
+    public boolean mapBoolean(boolean var) {
         return var;
     }
 
-    public byte map(byte var) {
+    public byte mapByte(byte var) {
         return var;
     }
 
-    public short map(short var) {
+    public short mapShort(short var) {
         return var;
     }
 
-    public char map(char var) {
+    public char mapChar(char var) {
         return var;
     }
 
-    public int map(int var) {
+    public int mapInt(int var) {
         return var;
     }
 
-    public long map(long var) {
+    public long mapLong(long var) {
         return var;
     }
 
-    public float map(float var) {
+    public float mapFloat(float var) {
         return var;
     }
 
-    public double map(double var) {
+    public double mapDouble(double var) {
         return var;
     }
 
-    public String map(String var) {
+    public String mapString(String var) {
         return var;
     }
 
-    public Identity map(Identity var) {
+    public Identity mapObject(Identity var) {
         return var;
     }
 
-    public boolean[] map(boolean[] var) {
+    public boolean[] mapBooleanArray(boolean[] var) {
         return var;
     }
 
-    public byte[] map(byte[] var) {
+    public byte[] mapByteArray(byte[] var) {
         return var;
     }
 
-    public short[] map(short[] var) {
+    public short[] mapShortArray(short[] var) {
         return var;
     }
 
-    public char[] map(char[] var) {
+    public char[] mapCharArray(char[] var) {
         return var;
     }
 
-    public int[] map(int[] var) {
+    public int[] mapIntArray(int[] var) {
         return var;
     }
 
-    public long[] map(long[] var) {
+    public long[] mapLongArray(long[] var) {
         return var;
     }
 
-    public float[] map(float[] var) {
+    public float[] mapFloatArray(float[] var) {
         return var;
     }
 
-    public double[] map(double[] var) {
+    public double[] mapDoubleArray(double[] var) {
         return var;
     }
 
-    public String[] map(String[] var) {
+    public String[] mapStringArray(String[] var) {
         return var;
     }
 
-    public Identity[] map(Identity[] var) {
+    public Identity[] mapObjectArray(Identity[] var) {
         return var;
     }
 
@@ -87,83 +87,87 @@ public class Identity {
 
     public static void mapStatic() {}
 
-    public static boolean mapStatic(boolean var) {
+    public static boolean mapStaticBoolean(boolean var) {
         return var;
     }
 
-    public static byte mapStatic(byte var) {
+    public static byte mapStaticByte(byte var) {
         return var;
     }
 
-    public static short mapStatic(short var) {
+    public static short mapStaticShort(short var) {
         return var;
     }
 
-    public static char mapStatic(char var) {
+    public static char mapStaticChar(char var) {
         return var;
     }
 
-    public static int mapStatic(int var) {
+    public static int mapStaticInt(int var) {
         return var;
     }
 
-    public static long mapStatic(long var) {
+    public static long mapStaticLong(long var) {
         return var;
     }
 
-    public static float mapStatic(float var) {
+    public static float mapStaticFloat(float var) {
         return var;
     }
 
-    public static double mapStatic(double var) {
+    public static double mapStaticDouble(double var) {
         return var;
     }
 
-    public static String mapStatic(String var) {
+    public static String mapStaticString(String var) {
         return var;
     }
 
-    public static Identity mapStatic(Identity var) {
+    public static Identity mapStaticObject(Identity var) {
         return var;
     }
 
-    public static boolean[] mapStatic(boolean[] var) {
+    public static boolean[] mapStaticBooleanArray(boolean[] var) {
         return var;
     }
 
-    public static byte[] mapStatic(byte[] var) {
+    public static byte[] mapStaticByteArray(byte[] var) {
         return var;
     }
 
-    public static short[] mapStatic(short[] var) {
+    public static short[] mapStaticShortArray(short[] var) {
         return var;
     }
 
-    public static char[] mapStatic(char[] var) {
+    public static char[] mapStaticCharArray(char[] var) {
         return var;
     }
 
-    public static int[] mapStatic(int[] var) {
+    public static int[] mapStaticIntArray(int[] var) {
         return var;
     }
 
-    public static long[] mapStatic(long[] var) {
+    public static long[] mapStaticLongArray(long[] var) {
         return var;
     }
 
-    public static float[] mapStatic(float[] var) {
+    public static float[] mapStaticFloatArray(float[] var) {
         return var;
     }
 
-    public static double[] mapStatic(double[] var) {
+    public static double[] mapStaticDoubleArray(double[] var) {
         return var;
     }
 
-    public static String[] mapStatic(String[] var) {
+    public static String[] mapStaticStringArray(String[] var) {
         return var;
     }
 
-    public static Identity[] mapStatic(Identity[] var) {
+    public static Identity[] mapStaticObjectArray(Identity[] var) {
         return var;
+    }
+
+    public boolean eql(Identity var) {
+        return this.equals(var);
     }
 }
