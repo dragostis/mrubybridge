@@ -11,7 +11,7 @@ public class MRubyState {
         System.loadLibrary("mrubystate");
     }
 
-    private long pointer;
+    public long pointer;
     private List<Class> classes;
     private List<Method> toBeRemoved;
 
@@ -25,17 +25,10 @@ public class MRubyState {
         Collections.addAll(toBeRemoved, Object.class.getMethods());
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-
-
-        super.finalize();
-    }
-
     public void loadClass(Class aClass) {
         classes.add(aClass);
 
-        loadClassToState(pointer, aClass.getCanonicalName(), aClass.getName());
+        loadClassToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass));
     }
 
     public void loadMethods() {
@@ -64,17 +57,29 @@ public class MRubyState {
                 int j = i + constructors.length;
 
                 javaNames[j] = publicMethods[i].getName();
-                rubyNames[j] = getRubyName(javaNames[j]);
+                rubyNames[j] = getRubyMethodName(javaNames[j]);
                 javaSignatures[j] = getSignature(publicMethods[i]);
                 isStatic[j] = Modifier.isStatic(publicMethods[i].getModifiers());
             }
 
-            loadClassMethodsToState(pointer, aClass.getCanonicalName(), aClass.getName(), javaNames, rubyNames,
+            loadClassMethodsToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass), javaNames, rubyNames,
                     javaSignatures, isStatic);
         }
     }
 
-    private String getRubyName(String javaName) {
+    public void close() {
+        close(pointer);
+    }
+
+    private String getJavaClassName(Class aClass) {
+        return aClass.getCanonicalName().replaceAll("\\.", "/");
+    }
+
+    private String getRubyClassName(Class aClass) {
+        return aClass.getName().replaceAll("(\\w+\\.)*", "");
+    }
+
+    private String getRubyMethodName(String javaName) {
         javaName = javaName.replaceAll("get", "");
         if (javaName.matches("set.*")) javaName = javaName.substring(3) + '=';
 
@@ -188,5 +193,5 @@ public class MRubyState {
 
     private native void loadString(long pointer, String mrubyString, String fileName);
 
-    private native void close();
+    private native void close(long pointer);
 }

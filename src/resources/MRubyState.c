@@ -10,6 +10,7 @@
 #include <mruby/string.h>
 
 #include "MRubyState.h"
+#include "java_class.h"
 
 JNIEnv* jenv;
 
@@ -114,9 +115,9 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
         char* className;
         int stringLen;
 
-        className = (char*) malloc((stringLen = strstr(signature, ";") - signature));
+        className = malloc((stringLen = strstr(signature, ";") - signature));
         memcpy(className, signature + 1, stringLen - 1);
-        className[stringLen] = '\0';
+        className[stringLen - 1] = '\0';
 
         jclass arrayClass = (*jenv)->FindClass(jenv, className);
 
@@ -214,11 +215,11 @@ char* getRubyClass(char* javaClass) {
     int dotIndex = -1;
     char* string = javaClass;
 
-    while ((string = strstr(javaClass, ".")) != NULL) {
+    while ((string = strstr(javaClass, "/")) != NULL) {
         javaClass = string + 1;
     }
 
-    char* result = (char*) malloc(strlen(javaClass));
+    char* result = malloc(strlen(javaClass) + 1);
     strcpy(result, javaClass);
 
     int len = strlen(result);
@@ -537,157 +538,7 @@ JNIEXPORT jlong JNICALL Java_MRubyState_getStatePointer(JNIEnv* env,
     jenv = env;
     mrb_state* mrb = mrb_open();
 
-    const char* defineJavaClass = "module Boolean; end\n"
-                                  "\n"
-                                  "class TrueClass; include Boolean; end\n"
-                                  "class FalseClass; include Boolean; end\n"
-                                  "\n"
-                                  "class JavaMethod\n"
-                                  "  def initialize(pointer, name, signature, java_class)\n"
-                                  "    @pointer = pointer\n"
-                                  "    @name = name\n"
-                                  "    @signature = signature.clone\n"
-                                  "    @java_class = java_class\n"
-                                  "\n"
-                                  "    @signature.chop! if name == :construct\n"
-                                  "\n"
-                                  "    @types = get_types signature\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def get_types(signature)\n"
-                                  "    types = []\n"
-                                  "\n"
-                                  "    signature = signature[1..-1]\n"
-                                  "\n"
-                                  "    array = false\n"
-                                  "\n"
-                                  "    while signature.index ')'\n"
-                                  "      type = signature[0]\n"
-                                  "\n"
-                                  "      next_index = 1\n"
-                                  "\n"
-                                  "      case type\n"
-                                  "      when 'Z'\n"
-                                  "        types << Boolean unless array\n"
-                                  "      when 'C', 'B', 'S', 'I', 'J'\n"
-                                  "        types << Fixnum unless array\n"
-                                  "      when 'F', 'D'\n"
-                                  "        types << Float unless array\n"
-                                  "      when '['\n"
-                                  "        types << Array\n"
-                                  "\n"
-                                  "        array = true\n"
-                                  "      when 'L'\n"
-                                  "        last_index = signature.index ';'\n"
-                                  "\n"
-                                  "        types << get_class(signature[1..(last_index - 1)]) unless array\n"
-                                  "\n"
-                                  "        next_index = last_index + 1\n"
-                                  "      end\n"
-                                  "\n"
-                                  "      array = false unless type == '['\n"
-                                  "\n"
-                                  "      signature = signature[next_index..-1]\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    types\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def get_class(java_class)\n"
-                                  "    class_name = java_class.split('.').last\n"
-                                  "\n"
-                                  "    return String if class_name == 'java/lang/String'\n"
-                                  "    return JavaClass if class_name == 'java/lang/Object'\n"
-                                  "\n"
-                                  "    Kernel.const_get class_name\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def matches?(args)\n"
-                                  "    return true if @types.empty? && args.empty?\n"
-                                  "    return false unless @types.length == args.length\n"
-                                  "\n"
-                                  "    @types && (0...(@types.length)).map { |i| args[i].kind_of? @types[i] }.inject(:&)\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def call(args, object=nil)\n"
-                                  "    if object\n"
-                                  "      JavaMethod.java_call(@pointer, object.pointer, @signature, @java_class, *(get_value args))\n"
-                                  "    else\n"
-                                  "      JavaMethod.java_call_static(@pointer, @signature, @java_class, *(get_value args))\n"
-                                  "    end\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def get_value(arg)\n"
-                                  "    return arg.map { |a| get_value a } if arg.kind_of? Array\n"
-                                  "\n"
-                                  "    arg.kind_of?(JavaClass) ? arg.pointer : arg\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  private :get_types, :get_class\n"
-                                  "end\n"
-                                  "\n"
-                                  "class JavaClass\n"
-                                  "  attr_accessor :pointer\n"
-                                  "  attr_reader :name\n"
-                                  "\n"
-                                  "  def initialize(*args)\n"
-                                  "    @pointer = construct(*args)\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  def method_missing(name, *args)\n"
-                                  "    return super unless method = self.class.match_instance_method(name, args)\n"
-                                  "\n"
-                                  "    method.call(args, self)\n"
-                                  "  end\n"
-                                  "\n"
-                                  "  class << self\n"
-                                  "    attr_accessor :java_class\n"
-                                  "\n"
-                                  "    def instance_methods\n"
-                                  "      @instance_methods ||= {}\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def class_methods\n"
-                                  "      @class_methods ||= {}\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def set_instance_method(pointer, name, signature)\n"
-                                  "      name = name.to_sym\n"
-                                  "\n"
-                                  "      unless instance_methods[name].nil?\n"
-                                  "        instance_methods[name] << JavaMethod.new(pointer, name, signature, java_class)\n"
-                                  "      else\n"
-                                  "        instance_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]\n"
-                                  "      end\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def set_class_method(pointer, name, signature)\n"
-                                  "      name = name.to_sym\n"
-                                  "\n"
-                                  "      unless class_methods[name].nil?\n"
-                                  "        class_methods[name] << JavaMethod.new(pointer, name, signature, java_class)\n"
-                                  "      else\n"
-                                  "        class_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]\n"
-                                  "      end\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def method_missing(name, *args)\n"
-                                  "      return super unless method = match_class_method(name, args)\n"
-                                  "\n"
-                                  "      method.call(args)\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def match_instance_method(name, args)\n"
-                                  "      instance_methods[name] && instance_methods[name].select { |method| method.matches?(args) }.first\n"
-                                  "    end\n"
-                                  "\n"
-                                  "    def match_class_method(name, args)\n"
-                                  "      class_methods[name] && class_methods[name].select { |method| method.matches?(args) }.first\n"
-                                  "    end\n"
-                                  "  end\n"
-                                  "end";
-
-    mrb_load_string(mrb, defineJavaClass);
+    mrb_load_string(mrb, (const char *) java_class_rb);
 
     struct RClass* javaMethod = mrb_class_get(mrb, "JavaMethod");
 
@@ -744,7 +595,7 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobj
             methodPointer = (*env)->GetStaticMethodID(env, thisClass, javaName, signature);
         }
 
-        mrb_value* args = (mrb_value*) malloc(sizeof(mrb_value) * 3);
+        mrb_value* args = malloc(sizeof(mrb_value) * 3);
 
         args[0] = pointerToFloat(mrb, (long) methodPointer);
         args[1] = mrb_str_new_cstr(mrb, rubyName);
@@ -762,6 +613,8 @@ JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObjec
         jstring fileName) {
     mrb_state* mrb = (mrb_state*) mRubyState;
     mrbc_context* context = mrbc_context_new(mrb);
+
+    context->capture_errors = 1;
 
     mrbc_filename(mrb, context, (*env)->GetStringUTFChars(env, fileName, NULL));
 
