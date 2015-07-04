@@ -117,7 +117,7 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
 
         className = malloc((stringLen = strstr(signature, ";") - signature));
         memcpy(className, signature + 1, stringLen - 1);
-        className[stringLen] = '\0';
+        className[stringLen - 1] = '\0';
 
         jclass arrayClass = (*jenv)->FindClass(jenv, className);
 
