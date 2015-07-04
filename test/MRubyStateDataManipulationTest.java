@@ -28,7 +28,6 @@ public class MRubyStateDataManipulationTest {
         state = new MRubyState();
         state.loadClass(Identity.class);
         state.loadMethods();
-        state.executeFile( loader.getFile("helper/Tester.rb") );
     }
 
 
