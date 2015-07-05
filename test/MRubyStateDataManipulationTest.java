@@ -46,4 +46,14 @@ public class MRubyStateDataManipulationTest {
             fail(e.getMessage());
         }
     }
+
+    @Test
+    public void testExecuteComplexSignature() throws IOException {
+        try {
+            File file = loader.getFile("ruby/complex_signature.rb");
+            state.executeFile(file);
+        } catch (RuntimeException e) {
+            fail(e.getMessage());
+        }
+    }
 }

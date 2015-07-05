@@ -170,4 +170,8 @@ public class Identity {
     public boolean eql(Identity var) {
         return this.equals(var);
     }
+
+    public static int[] complex(int a, double b, int[] var, String c) {
+        return var;
+    }
 }
