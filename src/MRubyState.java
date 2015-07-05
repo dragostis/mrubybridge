@@ -72,7 +72,7 @@ public class MRubyState {
     }
 
     private String getJavaClassName(Class aClass) {
-        return aClass.getCanonicalName().replaceAll("\\.", "/");
+        return aClass.getName().replaceAll("\\.", "/");
     }
 
     private String getRubyClassName(Class aClass) {

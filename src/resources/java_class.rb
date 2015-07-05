@@ -22,7 +22,7 @@ class JavaMethod
 
     array = false
 
-    while signature.index ')'
+    while signature.include? ')'
       type = signature[0]
 
       next_index = 1
@@ -67,21 +67,23 @@ class JavaMethod
     return true if @types.empty? && args.empty?
     return false unless @types.length == args.length
 
-    @types && (0...(@types.length)).map { |i| args[i].kind_of? @types[i] }.inject(:&)
+    @types && args.zip(@types).all? { |arg, type| arg.is_a? type }
   end
 
-  def call(args, object=nil)
+  def call(args, object = nil)
     if object
-      JavaMethod.java_call(@pointer, object.pointer, @signature, @java_class, *(get_value args))
+      JavaMethod.java_call(@pointer, object.pointer, @signature, @java_class,
+                           *(get_value args))
     else
-      JavaMethod.java_call_static(@pointer, @signature, @java_class, *(get_value args))
+      JavaMethod.java_call_static(@pointer, @signature, @java_class,
+                                  *(get_value args))
     end
   end
 
   def get_value(arg)
-    return arg.map { |a| get_value a } if arg.kind_of? Array
+    return arg.map { |a| get_value a } if arg.is_a? Array
 
-    arg.kind_of?(JavaClass) ? arg.pointer : arg
+    arg.is_a?(JavaClass) ? arg.pointer : arg
   end
 
   private :get_types, :get_class
@@ -98,7 +100,7 @@ class JavaClass
   def method_missing(name, *args)
     return super unless method = self.class.match_instance_method(name, args)
 
-    method.call(args, self)
+    method.call args, self
   end
 
   class << self
@@ -115,35 +117,41 @@ class JavaClass
     def set_instance_method(pointer, name, signature)
       name = name.to_sym
 
-      unless instance_methods[name].nil?
-        instance_methods[name] << JavaMethod.new(pointer, name, signature, java_class)
+      if instance_methods[name].nil?
+        instance_methods[name] = [JavaMethod.new(pointer, name, signature,
+                                                 java_class)]
       else
-        instance_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]
+        instance_methods[name] << JavaMethod.new(pointer, name, signature,
+                                                 java_class)
       end
     end
 
     def set_class_method(pointer, name, signature)
       name = name.to_sym
 
-      unless class_methods[name].nil?
-        class_methods[name] << JavaMethod.new(pointer, name, signature, java_class)
+      if class_methods[name].nil?
+        class_methods[name] = [JavaMethod.new(pointer, name, signature,
+                                              java_class)]
       else
-        class_methods[name] = [JavaMethod.new(pointer, name, signature, java_class)]
+        class_methods[name] << JavaMethod.new(pointer, name, signature,
+                                              java_class)
       end
     end
 
     def method_missing(name, *args)
       return super unless method = match_class_method(name, args)
 
-      method.call(args)
+      method.call args
     end
 
     def match_instance_method(name, args)
-      instance_methods[name] && instance_methods[name].select { |method| method.matches?(args) }.first
+      instance_methods[name] && instance_methods[name]
+        .find { |method| method.matches? args }
     end
 
     def match_class_method(name, args)
-      class_methods[name] && class_methods[name].select { |method| method.matches?(args) }.first
+      class_methods[name] && class_methods[name]
+        .find { |method| method.matches? args }
     end
   end
 end

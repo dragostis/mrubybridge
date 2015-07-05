@@ -29,7 +29,7 @@ before_install:
   - cd $repo_dir
   - cd src/resources
   - java_home=$(dirname $(dirname $(readlink -f $(which javac))))
-  - xxd -i java_class.rb java_class.h
+  - xxd -i java_class.rb JavaClass.h
   - gcc -I$java_home/include -I$java_home/include/linux -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
   - cd ../..
 

@@ -33,7 +33,7 @@ public class MRubyStateTest {
 
 
     @Test
-    public void testExecute_errorHandling_syntax() throws IOException {
+    public void testExecuteErrorHandlingSyntax() throws IOException {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("SyntaxError: line 2: syntax error, unexpected keyword_end, expecting $end");
 
@@ -43,7 +43,7 @@ public class MRubyStateTest {
 
 
     @Test
-    public void testExecute_errorHandling_type() throws IOException {
+    public void testExecuteErrorHandlingType() throws IOException {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("type_error.rb:1: non float value (TypeError)");
 
