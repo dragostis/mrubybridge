@@ -1,5 +1,5 @@
 language: java
-sudo: true
+sudo: required
 jdk:
   - oraclejdk7
   - openjdk7
@@ -16,7 +16,17 @@ before_install:
   - export PATH="$HOME/.linuxbrew/bin:$PATH"
   - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
   - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-  - brew install mruby
+  - brew install bison
+  - git clone --branch 1.1.0 --depth=1 https://github.com/mruby/mruby.git ~/mruby
+  - rm ~/mruby/build_config.rb
+  - cp build_config.rb ~/mruby/build_config.rb
+  - repo_dir=$(pwd)
+  - cd ~/mruby
+  - make
+  - sudo mv -Rf build/lib /usr
+  - sudo mv -Rf build/bin /usr
+  - sudo mv -Rf build/include /usr
+  - cd $repo_dir
   - cd src/resources
   - xxd -i java_class.rb java_class.h
   - gcc -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
