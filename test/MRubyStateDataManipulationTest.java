@@ -38,7 +38,7 @@ public class MRubyStateDataManipulationTest {
 
 
     @Test
-    public void testExecute_dataReturn_unaltered() throws IOException {
+    public void testExecuteDataReturnUnaltered() throws IOException {
         try {
             File file = loader.getFile("ruby/method_calls.rb");
             state.executeFile(file);
