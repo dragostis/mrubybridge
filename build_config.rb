@@ -11,7 +11,7 @@ MRuby::Build.new do |conf|
   enable_debug
 
   # include the default GEMs
-  conf.gembox 'default'
+  # conf.gembox 'default'
 
   # C compiler settings
   conf.cc do |cc|
@@ -91,7 +91,7 @@ MRuby::Build.new('host-debug') do |conf|
   enable_debug
 
   # include the default GEMs
-  conf.gembox 'default'
+  # conf.gembox 'default'
 
   # C compiler settings
   conf.cc.defines = %w(ENABLE_DEBUG)
