@@ -1,0 +1,1 @@
+puts Example.new(1) + Example.new(2)
