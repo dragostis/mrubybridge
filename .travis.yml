@@ -6,6 +6,8 @@ jdk:
 branches:
   only:
     - master
+notifications:
+  email: false
     
 before_install:
   - sudo apt-get update -qq
