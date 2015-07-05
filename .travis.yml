@@ -25,7 +25,7 @@ before_install:
   - make
   - sudo mv -f build/host/lib/* /usr/lib
   - sudo mv -f build/host/bin/* /usr/bin
-  - sudo mv -f build/host/include/* /usr/include
+  - sudo mv -f include/* /usr/include
   - cd $repo_dir
   - cd src/resources
   - xxd -i java_class.rb java_class.h
