@@ -14,6 +14,7 @@ end
 
 ## Compilation
 ```
+cd src/resources
 xxd -i java_class.rb JavaClass.h
 gcc -I$JAVA_HOME/include -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
 ```
