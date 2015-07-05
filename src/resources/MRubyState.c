@@ -25,14 +25,14 @@ long floatToPointer(mrb_state* mrb, mrb_value flt) {
 jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
     jarray result;
     mrb_int i;
-    mrb_int len = mrb_ary_len(mrb, arg);
+    mrb_int length = mrb_ary_len(mrb, arg);
 
     if (signature[0] == 'Z') {
-        result = (*jenv)->NewBooleanArray(jenv, len);
+        result = (*jenv)->NewBooleanArray(jenv, length);
 
-        jboolean array[len];
+        jboolean array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             if (mrb_type(mrb_ary_ref(mrb, arg, i)) == MRB_TT_TRUE) {
                 array[i] = (jboolean) 1;
             } else {
@@ -40,77 +40,77 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
             }
         }
 
-        (*jenv)->SetBooleanArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetBooleanArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'B') {
-        result = (*jenv)->NewByteArray(jenv, len);
+        result = (*jenv)->NewByteArray(jenv, length);
 
-        jbyte array[len];
+        jbyte array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jbyte) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetByteArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetByteArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'C') {
-        result = (*jenv)->NewCharArray(jenv, len);
+        result = (*jenv)->NewCharArray(jenv, length);
 
-        jchar array[len];
+        jchar array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jchar) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetCharArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetCharArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'S') {
-        result = (*jenv)->NewShortArray(jenv, len);
+        result = (*jenv)->NewShortArray(jenv, length);
 
-        jshort array[len];
+        jshort array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jshort) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetShortArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetShortArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'I') {
-        result = (*jenv)->NewIntArray(jenv, len);
+        result = (*jenv)->NewIntArray(jenv, length);
 
-        jint array[len];
+        jint array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jint) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetIntArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetIntArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'J') {
-        result = (*jenv)->NewLongArray(jenv, len);
+        result = (*jenv)->NewLongArray(jenv, length);
 
-        jlong array[len];
+        jlong array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jlong) mrb_fixnum(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetLongArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetLongArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'F') {
-        result = (*jenv)->NewFloatArray(jenv, len);
+        result = (*jenv)->NewFloatArray(jenv, length);
 
-        jfloat array[len];
+        jfloat array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jfloat) mrb_float(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetFloatArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetFloatArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'D') {
-        result = (*jenv)->NewDoubleArray(jenv, len);
+        result = (*jenv)->NewDoubleArray(jenv, length);
 
-        jdouble array[len];
+        jdouble array[length];
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             array[i] = (jdouble) mrb_float(mrb_ary_ref(mrb, arg, i));
         }
 
-        (*jenv)->SetDoubleArrayRegion(jenv, result, 0, len, array);
+        (*jenv)->SetDoubleArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'L') {
         char* className;
         int stringLen;
@@ -121,14 +121,14 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
 
         jclass arrayClass = (*jenv)->FindClass(jenv, className);
 
-        result = (*jenv)->NewObjectArray(jenv, len, arrayClass, NULL);
+        result = (*jenv)->NewObjectArray(jenv, length, arrayClass, NULL);
 
-        jboolean string = strstr(signature, "Ljava/lang/String") != NULL;
+        int isString = strstr(signature, "Ljava/lang/String") != NULL;
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             jobject object;
 
-            if (string) {
+            if (isString) {
                 object = (*jenv)->NewStringUTF(jenv, mrb_string_value_ptr(mrb, mrb_ary_ref(mrb, arg, i)));
             } else {
                 mrb_value pointerString = mrb_ary_ref(mrb, arg, i);
@@ -301,11 +301,13 @@ mrb_value getRubyArray(mrb_state* mrb, char* signature, jarray array) {
             mrb_value object;
 
             if (strstr(signature, "Ljava/lang/String") != NULL) {
-                jobject javaObject = (*jenv)->GetObjectArrayElement(jenv, array, i);
+                jstring javaString = (jstring) (*jenv)->GetObjectArrayElement(jenv, array, i);
 
-                const char* string = (*jenv)->GetStringUTFChars(jenv, javaObject, NULL);
+                const char* string = (*jenv)->GetStringUTFChars(jenv, javaString, NULL);
 
                 object = mrb_str_new_cstr(mrb, string);
+
+                (*jenv)->ReleaseStringUTFChars(jenv, javaString, string);
             } else {
                 object = allocate(mrb, getRubyClass(signature + 1));
 
@@ -379,11 +381,13 @@ mrb_value getRubyReturn(mrb_state* mrb, mrb_value self, char* signature, char* c
             result = getRubyArray(mrb, signature + 1, array);
         } else if (signature[0] == 'L') {
             if (strstr(signature, "Ljava/lang/String") != NULL) {
-                jstring str = (jstring) (*jenv)->CallObjectMethodA(jenv, thisObject, methodID, args);
+                jstring javaString = (jstring) (*jenv)->CallObjectMethodA(jenv, thisObject, methodID, args);
 
-                const char* string = (*jenv)->GetStringUTFChars(jenv, str, NULL);
+                const char* string = (*jenv)->GetStringUTFChars(jenv, javaString, NULL);
 
                 result = mrb_str_new_cstr(mrb, string);
+
+                (*jenv)->ReleaseStringUTFChars(jenv, javaString, string);
             } else {
                 mrb_value object = allocate(mrb, getRubyClass(signature + 1));
 
@@ -453,11 +457,13 @@ mrb_value getRubyStaticReturn(mrb_state* mrb, mrb_value self, char* signature, c
         result = getRubyArray(mrb, signature + 1, array);
     } else if (signature[0] == 'L') {
         if (strstr(signature, "Ljava/lang/String") != NULL) {
-            jstring str = (jstring) (*jenv)->CallStaticObjectMethodA(jenv, javaClass, methodID, args);
+            jstring javaString = (jstring) (*jenv)->CallStaticObjectMethodA(jenv, javaClass, methodID, args);
 
-            const char* string = (*jenv)->GetStringUTFChars(jenv, str, NULL);
+            const char* string = (*jenv)->GetStringUTFChars(jenv, javaString, NULL);
 
             result = mrb_str_new_cstr(mrb, string);
+
+            (*jenv)->ReleaseStringUTFChars(jenv, javaString, string);
         } else {
             mrb_value object = allocate(mrb, getRubyClass(signature + 1));
 
@@ -561,6 +567,9 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassToState(JNIEnv* env, jobject thi
     mrb_value string = mrb_str_new_cstr(mrb, javaNameString);
 
     mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "java_class="), 1, &string);
+
+    (*env)->ReleaseStringUTFChars(env, javaName, javaNameString);
+    (*env)->ReleaseStringUTFChars(env, rubyName, rubyNameString);
 }
 
 JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobject thisObject, jlong mRubyState,
@@ -580,33 +589,41 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobj
     int i;
 
     for (i = 0; i < length; i++) {
-        const char* javaName = (*env)->GetStringUTFChars(env,
-                (jstring) (*env)->GetObjectArrayElement(env, javaNames, i), NULL);
-        const char* rubyName = (*env)->GetStringUTFChars(env,
-                (jstring) (*env)->GetObjectArrayElement(env, rubyNames, i), NULL);
-        const char* signature = (*env)->GetStringUTFChars(env,
-                (jstring) (*env)->GetObjectArrayElement(env, javaSignatures, i), NULL);
+        jstring javaName = (jstring) (*env)->GetObjectArrayElement(env, javaNames, i);
+        jstring rubyName = (jstring) (*env)->GetObjectArrayElement(env, rubyNames, i);
+        jstring signature = (jstring) (*env)->GetObjectArrayElement(env, javaSignatures, i);
+
+        const char* javaNameString = (*env)->GetStringUTFChars(env, javaName, NULL);
+        const char* rubyNameString = (*env)->GetStringUTFChars(env, rubyName, NULL);
+        const char* signatureString = (*env)->GetStringUTFChars(env, signature, NULL);
 
         jmethodID methodPointer;
 
         if (!isStaticArray[i]) {
-            methodPointer = (*env)->GetMethodID(env, thisClass, javaName, signature);
+            methodPointer = (*env)->GetMethodID(env, thisClass, javaNameString, signatureString);
         } else {
-            methodPointer = (*env)->GetStaticMethodID(env, thisClass, javaName, signature);
+            methodPointer = (*env)->GetStaticMethodID(env, thisClass, javaNameString, signatureString);
         }
 
         mrb_value* args = malloc(sizeof(mrb_value) * 3);
 
         args[0] = pointerToFloat(mrb, (long) methodPointer);
-        args[1] = mrb_str_new_cstr(mrb, rubyName);
-        args[2] = mrb_str_new_cstr(mrb, signature);
+        args[1] = mrb_str_new_cstr(mrb, rubyNameString);
+        args[2] = mrb_str_new_cstr(mrb, signatureString);
 
         if (!isStaticArray[i]) {
             mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "set_instance_method"), 3, args);
         } else {
             mrb_funcall_argv(mrb, mrb_obj_value(rubyClass), mrb_intern_lit(mrb, "set_class_method"), 3, args);
         }
+
+        (*env)->ReleaseStringUTFChars(env, javaName, javaNameString);
+        (*env)->ReleaseStringUTFChars(env, rubyName, rubyNameString);
+        (*env)->ReleaseStringUTFChars(env, signature, signatureString);
     }
+
+    (*env)->ReleaseStringUTFChars(env, className, classNameString);
+    (*env)->ReleaseStringUTFChars(env, rubyClassName, rubyClassNameString);
 }
 
 JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObject, jlong mRubyState, jstring string,
@@ -616,9 +633,10 @@ JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObjec
 
     context->capture_errors = 1;
 
-    mrbc_filename(mrb, context, (*env)->GetStringUTFChars(env, fileName, NULL));
-
+    const char* fileNameString = (*env)->GetStringUTFChars(env, fileName, NULL);
     const char* mrubyString = (*env)->GetStringUTFChars(env, string, NULL);
+
+    mrbc_filename(mrb, context, fileNameString);
 
     mrb_load_string_cxt(mrb, mrubyString, context);
 
@@ -627,6 +645,9 @@ JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObjec
 
         throwRuntimeException(env, mrb_string_value_ptr(mrb, message));
     }
+
+    (*env)->ReleaseStringUTFChars(env, fileName, fileNameString);
+    (*env)->ReleaseStringUTFChars(env, string, mrubyString);
 }
 
 JNIEXPORT void JNICALL Java_MRubyState_close(JNIEnv* env, jobject thisObject, jlong mRubyState) {
