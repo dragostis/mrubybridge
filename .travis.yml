@@ -23,9 +23,9 @@ before_install:
   - repo_dir=$(pwd)
   - cd ~/mruby
   - make
-  - sudo mv -f build/lib /usr
-  - sudo mv -f build/bin /usr
-  - sudo mv -f build/include /usr
+  - sudo mv -f build/host/lib /usr
+  - sudo mv -f build/host/bin /usr
+  - sudo mv -f build/host/include /usr
   - cd $repo_dir
   - cd src/resources
   - xxd -i java_class.rb java_class.h
