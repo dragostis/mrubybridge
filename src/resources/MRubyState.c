@@ -10,7 +10,7 @@
 #include <mruby/string.h>
 
 #include "MRubyState.h"
-#include "java_class.h"
+#include "JavaClass.h"
 
 JNIEnv* jenv;
 
