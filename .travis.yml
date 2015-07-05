@@ -1,0 +1,37 @@
+language: java
+sudo: required
+jdk:
+  - oraclejdk7
+  - openjdk7
+branches:
+  only:
+    - master
+notifications:
+  email: false
+    
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y build-essential libc6-dev curl git m4 ruby texinfo libbz2-dev libcurl4-openssl-dev libexpat-dev libncurses-dev zlib1g-dev
+  - git clone https://github.com/Homebrew/linuxbrew.git ~/.linuxbrew
+  - export PATH="$HOME/.linuxbrew/bin:$PATH"
+  - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
+  - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
+  - brew install bison
+  - git clone --branch 1.1.0 --depth=1 https://github.com/mruby/mruby.git ~/mruby
+  - rm ~/mruby/build_config.rb
+  - cp build_config.rb ~/mruby/build_config.rb
+  - repo_dir=$(pwd)
+  - cd ~/mruby
+  - make
+  - sudo mv -f build/host/lib/* /usr/lib
+  - sudo mv -f build/host/bin/* /usr/bin
+  - sudo mv -f include/* /usr/include
+  - cd $repo_dir
+  - cd src/resources
+  - java_home=$(dirname $(dirname $(readlink -f $(which javac))))
+  - xxd -i java_class.rb java_class.h
+  - gcc -I$java_home/include -I$java_home/include/linux -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
+  - cd ../..
+
+install: mvn install -DskipTests=true
+script: mvn test
