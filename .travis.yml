@@ -28,8 +28,9 @@ before_install:
   - sudo mv -f include/* /usr/include
   - cd $repo_dir
   - cd src/resources
+  - java_home=$(dirname $(dirname $(readlink -f $(which javac))))
   - xxd -i java_class.rb java_class.h
-  - gcc -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
+  - gcc -I$java_home/include -I$java_home/include/linux -Wl,--whole-archive -lmruby -Wl,--no-whole-archive -fPIC -shared -o libmrubystate.so MRubyState.c
   - cd ../..
 
 install: mvn install -DskipTests=true
