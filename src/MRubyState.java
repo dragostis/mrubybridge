@@ -13,16 +13,11 @@ public class MRubyState {
 
     public long pointer;
     private List<Class> classes;
-    private List<Method> toBeRemoved;
 
     public MRubyState() {
         pointer = getStatePointer();
 
         classes = new ArrayList<Class>();
-
-        toBeRemoved = new ArrayList<Method>();
-
-        Collections.addAll(toBeRemoved, Object.class.getMethods());
     }
 
     public void loadClass(Class aClass) {
@@ -150,6 +145,9 @@ public class MRubyState {
 
     private Method[] filterObjectMethods(Method[] methods) {
         List<Method> newMethods = new ArrayList<Method>();
+        List<Method> toBeRemoved = new ArrayList<Method>();
+
+        Collections.addAll(toBeRemoved, Object.class.getMethods());
 
         for (Method method : methods) {
             boolean toRemove = false;
