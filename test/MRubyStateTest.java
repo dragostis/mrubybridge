@@ -18,7 +18,7 @@ public class MRubyStateTest {
 
     @Before
     public void setUp() {
-        state = new MRubyState();
+        state = new MRubyState(loader.getFile("ruby"));
     }
 
 
