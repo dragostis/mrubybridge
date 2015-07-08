@@ -25,7 +25,7 @@ public class MRubyStateDataManipulationTest {
 
     @Before
     public void setUp() throws IOException {
-        state = new MRubyState();
+        state = new MRubyState(loader.getFile("ruby"));
         state.loadClass(Identity.class);
         state.loadMethods();
     }
