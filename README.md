@@ -1,4 +1,4 @@
-# mrubybridge [![Build Status](https://travis-ci.org/dragostis/mrubybridge.svg?branch=master)](https://travis-ci.org/dragostis/mrubybridge)
+# mrubybridge [![Build Status](https://travis-ci.org/Anima-Engine/mrubybridge.svg?branch=master)](https://travis-ci.org/Anima-Engine/mrubybridge)
 An mruby bridge that lets you load Java classes and call their methods.
 
 ## Prerequisites
