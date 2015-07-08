@@ -2,9 +2,7 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MRubyState {
     static {
@@ -13,11 +11,14 @@ public class MRubyState {
 
     public long pointer;
     private List<Class> classes;
+    private Context context;
+    private File current;
+    private RequiredFiles requiredFiles = new RequiredFiles();
 
-    public MRubyState() {
+    public MRubyState(File rootDirectory) {
         pointer = getStatePointer();
-
         classes = new ArrayList<Class>();
+        context = new Context(rootDirectory);
     }
 
     public void loadClass(Class aClass) {
@@ -168,6 +169,8 @@ public class MRubyState {
     }
 
     public void executeFile(File mrubyFile) throws IOException {
+        current = mrubyFile;
+
         BufferedReader bufferedReader = new BufferedReader(new FileReader(mrubyFile));
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -179,6 +182,46 @@ public class MRubyState {
         }
 
         loadString(pointer, stringBuilder.toString(), mrubyFile.getName());
+    }
+
+    private boolean require(String fileName) throws IOException {
+        File mrubyFile = context.get(fileName);
+
+        if (requiredFiles.contains(current, mrubyFile)) {
+            return false;
+        } else {
+            File old = current;
+
+            current = mrubyFile;
+            executeFile(mrubyFile);
+            current = old;
+
+            return true;
+        }
+    }
+
+    private static class RequiredFiles {
+        private HashMap<File, HashSet<File>> required = new HashMap<File, HashSet<File>>();
+
+        public boolean contains(File required, File file) {
+            HashSet<File> files = this.required.get(required);
+
+            if (files == null) {
+                HashSet<File> set = new HashSet<File>();
+
+                this.required.put(required, set);
+
+                return false;
+            } else {
+                if (files.contains(file)) {
+                    return true;
+                } else {
+                    files.add(file);
+
+                    return false;
+                }
+            }
+        }
     }
 
     private native long getStatePointer();
