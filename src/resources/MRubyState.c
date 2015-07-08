@@ -13,6 +13,7 @@
 #include "JavaClass.h"
 
 JNIEnv* jenv;
+jobject this;
 
 mrb_value pointerToFloat(mrb_state* mrb, long pointer) {
     return mrb_float_value(mrb, (mrb_float) pointer);
@@ -480,6 +481,26 @@ mrb_value getRubyStaticReturn(mrb_state* mrb, mrb_value self, char* signature, c
     return result;
 }
 
+mrb_value require(mrb_state* mrb, mrb_value self) {
+    mrb_value fileName;
+
+    mrb_get_args(mrb, "o", &fileName, NULL);
+
+    jclass mRubyStateClass = (*jenv)->FindClass(jenv, "MRubyState");
+    jmethodID requireMethod = (*jenv)->GetMethodID(jenv, mRubyStateClass, "require", "(Ljava/lang/String;)Z");
+
+    jvalue javaArgs[1];
+    javaArgs[0].l = (*jenv)->NewStringUTF(jenv, mrb_string_value_ptr(mrb, fileName));
+
+    jboolean result = (*jenv)->CallBooleanMethodA(jenv, this, requireMethod, javaArgs);
+
+    if (0) {
+        return mrb_true_value();
+    } else {
+        return mrb_false_value();
+    }
+}
+
 mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* args;
     mrb_int len;
@@ -542,11 +563,14 @@ void throwRuntimeException(JNIEnv* env, const char* message) {
 JNIEXPORT jlong JNICALL Java_MRubyState_getStatePointer(JNIEnv* env,
         jobject thisObject) {
     jenv = env;
+    this = thisObject;
     mrb_state* mrb = mrb_open();
 
     mrb_load_string(mrb, (const char *) java_class_rb);
 
     struct RClass* javaMethod = mrb_class_get(mrb, "JavaMethod");
+
+    mrb_define_singleton_method(mrb, mrb->top_self, "require", require, MRB_ARGS_REQ(1));
 
     mrb_define_class_method(mrb, javaMethod, "java_call", call, MRB_ARGS_ANY());
     mrb_define_class_method(mrb, javaMethod, "java_call_static", call_static, MRB_ARGS_ANY());
@@ -628,6 +652,7 @@ JNIEXPORT void JNICALL Java_MRubyState_loadClassMethodsToState(JNIEnv* env, jobj
 
 JNIEXPORT void JNICALL Java_MRubyState_loadString(JNIEnv* env, jobject thisObject, jlong mRubyState, jstring string,
         jstring fileName) {
+    this = thisObject;
     mrb_state* mrb = (mrb_state*) mRubyState;
     mrbc_context* context = mrbc_context_new(mrb);
 
