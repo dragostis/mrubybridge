@@ -209,6 +209,8 @@ public class MRubyState {
             if (files == null) {
                 HashSet<File> set = new HashSet<File>();
 
+                set.add(file);
+
                 this.required.put(required, set);
 
                 return false;
