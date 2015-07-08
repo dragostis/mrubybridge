@@ -5,22 +5,21 @@ import resources.helper.Loader;
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.Assert.fail;
+
 public class MRubyStateTest {
     private MRubyState state;
     private static Loader loader;
-
 
     @BeforeClass
     public static void loader() {
         loader = Loader.getInstance();
     }
 
-
     @Before
     public void setUp() {
         state = new MRubyState(loader.getFile("ruby"));
     }
-
 
     @After
     public void tearDown() {
@@ -29,8 +28,6 @@ public class MRubyStateTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-
 
     @Test
     public void testExecuteErrorHandlingSyntax() throws IOException {
@@ -41,7 +38,6 @@ public class MRubyStateTest {
         state.executeFile(file);
     }
 
-
     @Test
     public void testExecuteErrorHandlingType() throws IOException {
         thrown.expect(RuntimeException.class);
@@ -49,5 +45,15 @@ public class MRubyStateTest {
 
         File file = loader.getFile("ruby/type_error.rb");
         state.executeFile(file);
+    }
+
+    @Test
+    public void testRequire() throws IOException {
+        try {
+            File file = loader.getFile("ruby/default.rb");
+            state.executeFile(file);
+        } catch (RuntimeException e) {
+            fail(e.getMessage());
+        }
     }
 }
