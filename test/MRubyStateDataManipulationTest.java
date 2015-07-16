@@ -5,6 +5,7 @@ import resources.helper.Loader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.junit.Assert.fail;
 
@@ -25,7 +26,7 @@ public class MRubyStateDataManipulationTest {
 
     @Before
     public void setUp() throws IOException {
-        state = new MRubyState(loader.getFile("ruby"));
+        state = new MRubyState(loader.getPath("ruby"));
         state.loadClass(Identity.class);
         state.loadMethods();
     }
@@ -40,8 +41,8 @@ public class MRubyStateDataManipulationTest {
     @Test
     public void testExecuteDataReturnUnaltered() throws IOException {
         try {
-            File file = loader.getFile("ruby/method_calls.rb");
-            state.executeFile(file);
+            InputStream inputStream = loader.getInputStream("ruby/method_calls.rb");
+            state.executeStream(inputStream, "method_calls.rb");
         } catch (RuntimeException e) {
             fail(e.getMessage());
         }
@@ -50,8 +51,8 @@ public class MRubyStateDataManipulationTest {
     @Test
     public void testExecuteComplexSignature() throws IOException {
         try {
-            File file = loader.getFile("ruby/complex_signature.rb");
-            state.executeFile(file);
+            InputStream inputStream = loader.getInputStream("ruby/complex_signature.rb");
+            state.executeStream(inputStream, "complex_signature.rb");
         } catch (RuntimeException e) {
             fail(e.getMessage());
         }

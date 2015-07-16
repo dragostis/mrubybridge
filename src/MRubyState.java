@@ -12,13 +12,13 @@ public class MRubyState {
     public long pointer;
     private List<Class> classes;
     private Context context;
-    private File current;
+    private String currentPath;
     private RequiredFiles requiredFiles = new RequiredFiles();
 
-    public MRubyState(File rootDirectory) {
+    public MRubyState(String rootPath) {
         pointer = getStatePointer();
         classes = new ArrayList<Class>();
-        context = new Context(rootDirectory);
+        context = new UnixContext(rootPath);
     }
 
     public void loadClass(Class aClass) {
@@ -168,10 +168,12 @@ public class MRubyState {
         return result;
     }
 
-    public void executeFile(File mrubyFile) throws IOException {
-        current = mrubyFile;
+    public void executeString(String mrubyString, String fileName) {
+        loadString(pointer, mrubyString, fileName);
+    }
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(mrubyFile));
+    public void executeStream(InputStream mrubyStream, String fileName) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(mrubyStream));
         StringBuilder stringBuilder = new StringBuilder();
 
         String line;
@@ -181,44 +183,44 @@ public class MRubyState {
             stringBuilder.append("\n");
         }
 
-        loadString(pointer, stringBuilder.toString(), mrubyFile.getName());
+        loadString(pointer, stringBuilder.toString(), fileName);
     }
 
-    private boolean require(String fileName) throws IOException {
-        File mrubyFile = context.get(fileName);
+    private boolean require(String path) throws IOException {
+        InputStream mrubyStream = context.get(path);
 
-        if (requiredFiles.contains(current, mrubyFile)) {
+        if (requiredFiles.contains(currentPath, path)) {
             return false;
         } else {
-            File old = current;
+            String oldPath = currentPath;
 
-            current = mrubyFile;
-            executeFile(mrubyFile);
-            current = old;
+            currentPath = path;
+            executeStream(mrubyStream, path);
+            currentPath = oldPath;
 
             return true;
         }
     }
 
     private static class RequiredFiles {
-        private HashMap<File, HashSet<File>> required = new HashMap<File, HashSet<File>>();
+        private HashMap<String, HashSet<String>> required = new HashMap<String, HashSet<String>>();
 
-        public boolean contains(File required, File file) {
-            HashSet<File> files = this.required.get(required);
+        public boolean contains(String required, String path) {
+            HashSet<String> paths = this.required.get(required);
 
-            if (files == null) {
-                HashSet<File> set = new HashSet<File>();
+            if (paths == null) {
+                HashSet<String> set = new HashSet<String>();
 
-                set.add(file);
+                set.add(path);
 
                 this.required.put(required, set);
 
                 return false;
             } else {
-                if (files.contains(file)) {
+                if (paths.contains(path)) {
                     return true;
                 } else {
-                    files.add(file);
+                    paths.add(path);
 
                     return false;
                 }
