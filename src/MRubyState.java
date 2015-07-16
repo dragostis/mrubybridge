@@ -168,10 +168,12 @@ public class MRubyState {
         return result;
     }
 
-    public void executeFile(File mrubyFile) throws IOException {
-        current = mrubyFile;
+    public void executeString(String mrubyString, String fileName) {
+        loadString(pointer, mrubyString, fileName);
+    }
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(mrubyFile));
+    public void executeStream(InputStream mrubyStream, String fileName) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(mrubyStream));
         StringBuilder stringBuilder = new StringBuilder();
 
         String line;
@@ -181,7 +183,7 @@ public class MRubyState {
             stringBuilder.append("\n");
         }
 
-        loadString(pointer, stringBuilder.toString(), mrubyFile.getName());
+        loadString(pointer, stringBuilder.toString(), fileName);
     }
 
     private boolean require(String fileName) throws IOException {
