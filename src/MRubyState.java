@@ -15,10 +15,10 @@ public class MRubyState {
     private File current;
     private RequiredFiles requiredFiles = new RequiredFiles();
 
-    public MRubyState(File rootDirectory) {
+    public MRubyState(String rootPath) {
         pointer = getStatePointer();
         classes = new ArrayList<Class>();
-        context = new Context(rootDirectory);
+        context = new UnixContext(rootPath);
     }
 
     public void loadClass(Class aClass) {
