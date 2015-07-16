@@ -1,6 +1,7 @@
 package resources.helper;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.net.URL;
 
 public class Loader {
@@ -17,9 +18,13 @@ public class Loader {
         return instance;
     }
 
-    public File getFile(String path) throws NullPointerException {
+    public String getPath(String path) {
+        return classLoader.getResource(path).getFile();
+    }
+
+    public FileInputStream getInputStream(String path) throws NullPointerException, FileNotFoundException {
         URL url = classLoader.getResource(path);
 
-        return new File(url.getFile());
+        return new FileInputStream(url.getFile());
     }
 }

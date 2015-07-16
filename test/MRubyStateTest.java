@@ -2,8 +2,8 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import resources.helper.Loader;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.junit.Assert.fail;
 
@@ -18,7 +18,7 @@ public class MRubyStateTest {
 
     @Before
     public void setUp() {
-        state = new MRubyState(loader.getFile("ruby"));
+        state = new MRubyState(loader.getPath("ruby"));
     }
 
     @After
@@ -34,8 +34,8 @@ public class MRubyStateTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("SyntaxError: line 2: syntax error, unexpected keyword_end, expecting $end");
 
-        File file = loader.getFile("ruby/syntax_error.rb");
-        state.executeFile(file);
+        InputStream inputStream = loader.getInputStream("ruby/syntax_error.rb");
+        state.executeStream(inputStream, "syntax_error.rb");
     }
 
     @Test
@@ -43,15 +43,15 @@ public class MRubyStateTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("type_error.rb:1: non float value (TypeError)");
 
-        File file = loader.getFile("ruby/type_error.rb");
-        state.executeFile(file);
+        InputStream inputStream = loader.getInputStream("ruby/type_error.rb");
+        state.executeStream(inputStream, "type_error.rb");
     }
 
     @Test
     public void testRequire() throws IOException {
         try {
-            File file = loader.getFile("ruby/default.rb");
-            state.executeFile(file);
+            InputStream inputStream = loader.getInputStream("ruby/default.rb");
+            state.executeStream(inputStream, "default.rb");
         } catch (RuntimeException e) {
             fail(e.getMessage());
         }
