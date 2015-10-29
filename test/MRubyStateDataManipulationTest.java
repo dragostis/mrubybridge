@@ -3,7 +3,6 @@ import org.junit.rules.ExpectedException;
 import resources.Identity;
 import resources.helper.Loader;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
