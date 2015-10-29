@@ -494,7 +494,7 @@ mrb_value require(mrb_state* mrb, mrb_value self) {
 
     jboolean result = (*jenv)->CallBooleanMethodA(jenv, this, requireMethod, javaArgs);
 
-    if (0) {
+    if (result) {
         return mrb_true_value();
     } else {
         return mrb_false_value();
