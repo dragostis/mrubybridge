@@ -24,7 +24,7 @@ long floatToPointer(mrb_state* mrb, mrb_value flt) {
 }
 
 jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
-    jarray result;
+    jarray result = NULL;
     mrb_int i;
     mrb_int length = mrb_ary_len(mrb, arg);
 
