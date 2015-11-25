@@ -114,7 +114,7 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
         (*jenv)->SetDoubleArrayRegion(jenv, result, 0, length, array);
     } else if (signature[0] == 'L') {
         char* className;
-        int stringLen;
+        size_t stringLen;
 
         className = malloc((stringLen = strstr(signature, ";") - signature));
         memcpy(className, signature + 1, stringLen - 1);
