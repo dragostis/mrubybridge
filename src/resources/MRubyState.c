@@ -145,7 +145,7 @@ jarray getArray(mrb_state* mrb, char* signature, mrb_value arg) {
 }
 
 jvalue getJavaArg(mrb_state* mrb, char** signature, mrb_value arg) {
-    jvalue result = NULL;
+    jvalue result;
     int nextIndex = 1;
 
     switch ((*signature)[0]) {
@@ -327,7 +327,7 @@ mrb_value getRubyArray(mrb_state* mrb, char* signature, jarray array) {
 
 mrb_value getRubyReturn(mrb_state* mrb, mrb_value self, char* signature, char* className, jmethodID methodID,
         jobject thisObject, jvalue* args) {
-    mrb_value result = NULL;
+    mrb_value result;
 
     if (signature[0] == '\0') {
         jclass javaClass = (*jenv)->FindClass(jenv, className);
@@ -407,7 +407,7 @@ mrb_value getRubyReturn(mrb_state* mrb, mrb_value self, char* signature, char* c
 
 mrb_value getRubyStaticReturn(mrb_state* mrb, mrb_value self, char* signature, char* className, jmethodID methodID,
         jvalue* args) {
-    mrb_value result = NULL;
+    mrb_value result;
 
     jclass javaClass = (*jenv)->FindClass(jenv, className);
 
