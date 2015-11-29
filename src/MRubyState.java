@@ -22,9 +22,38 @@ public class MRubyState {
     }
 
     public void loadClass(Class aClass) {
+        loadClass(aClass, ParameterLoad.NONE);
+    }
+
+    public void loadClass(Class aClass, ParameterLoad parameterLoad) {
         classes.add(aClass);
 
         loadClassToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass));
+
+        switch (parameterLoad) {
+            case NONE:
+                break;
+            case CHILDREN:
+                for (Method method : filterObjectMethods(aClass.getMethods())) {
+                    for (Class parameter : method.getParameterTypes()) loadClass(parameter, ParameterLoad.NONE);
+                }
+
+                for (Constructor constructor : aClass.getConstructors()) {
+                    for (Class parameter : constructor.getExceptionTypes()) loadClass(parameter, ParameterLoad.NONE);
+                }
+
+                break;
+            case RECURSIVE:
+                for (Method method : filterObjectMethods(aClass.getMethods())) {
+                    for (Class parameter : method.getParameterTypes()) loadClass(parameter, ParameterLoad.RECURSIVE);
+                }
+
+                for (Constructor constructor : aClass.getConstructors()) {
+                    for (Class parameter : constructor.getExceptionTypes()) loadClass(parameter, ParameterLoad.RECURSIVE);
+                }
+
+                break;
+        }
     }
 
     public void loadMethods() {
@@ -226,6 +255,12 @@ public class MRubyState {
                 }
             }
         }
+    }
+
+    public static enum ParameterLoad {
+        NONE,
+        CHILDREN,
+        RECURSIVE
     }
 
     private native long getStatePointer();
