@@ -13,12 +13,15 @@ public class MRubyState {
     private List<Class> classes;
     private Context context;
     private String currentPath;
-    private RequiredFiles requiredFiles = new RequiredFiles();
+    private RequiredFiles requiredFiles;
+    private Cache<String, String> cache;
 
     public MRubyState(String rootPath) {
         pointer = getStatePointer();
         classes = new ArrayList<Class>();
         context = new UnixContext(rootPath);
+        requiredFiles = new RequiredFiles();
+        cache = new Cache<String, String>(256);
     }
 
     public void loadClass(Class aClass) {
@@ -202,17 +205,26 @@ public class MRubyState {
     }
 
     public void executeStream(InputStream mrubyStream, String fileName) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(mrubyStream));
-        StringBuilder stringBuilder = new StringBuilder();
+        String cached = cache.get(fileName);
 
-        String line;
+        if (cached != null) {
+            loadString(pointer, cached, fileName);
+        } else {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(mrubyStream));
+            StringBuilder stringBuilder = new StringBuilder();
 
-        while((line = bufferedReader.readLine()) != null) {
-            stringBuilder.append(line);
-            stringBuilder.append("\n");
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+                stringBuilder.append("\n");
+            }
+
+            String string = stringBuilder.toString();
+
+            cache.put(fileName, string);
+            loadString(pointer, string, fileName);
         }
-
-        loadString(pointer, stringBuilder.toString(), fileName);
     }
 
     private boolean require(String path) throws IOException {
@@ -229,6 +241,12 @@ public class MRubyState {
 
             return true;
         }
+    }
+
+    public static enum ParameterLoad {
+        NONE,
+        CHILDREN,
+        RECURSIVE
     }
 
     private static class RequiredFiles {
@@ -257,10 +275,19 @@ public class MRubyState {
         }
     }
 
-    public static enum ParameterLoad {
-        NONE,
-        CHILDREN,
-        RECURSIVE
+    private static class Cache<K, V> extends LinkedHashMap<K, V> {
+        private int size;
+
+        public Cache(int size) {
+            super(16, 0.75f, true);
+
+            this.size = size;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+            return size() >= size;
+        }
     }
 
     private native long getStatePointer();
