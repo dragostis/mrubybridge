@@ -76,8 +76,8 @@ public class MRubyState {
     }
 
     private String getRubyMethodName(String javaName) {
-        javaName = javaName.replaceAll("get", "");
-        if (javaName.matches("set.*")) javaName = javaName.substring(3) + '=';
+        if (javaName.matches("^get.+")) javaName = javaName.substring(3);
+        if (javaName.matches("^set.+")) javaName = javaName.substring(3) + '=';
 
         javaName = Character.toLowerCase(javaName.charAt(0)) + javaName.substring(1);
 
