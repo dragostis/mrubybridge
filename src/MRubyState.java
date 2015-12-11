@@ -29,6 +29,8 @@ public class MRubyState {
     }
 
     public void loadClass(Class aClass, ParameterLoad parameterLoad) {
+        if (classes.contains(aClass)) return;
+
         classes.add(aClass);
 
         loadClassToState(pointer, getJavaClassName(aClass), getRubyClassName(aClass));
