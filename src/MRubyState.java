@@ -39,6 +39,8 @@ public class MRubyState {
             case CHILDREN:
                 for (Method method : filterObjectMethods(aClass.getMethods())) {
                     for (Class parameter : method.getParameterTypes()) loadClass(parameter, ParameterLoad.NONE);
+
+                    loadClass(method.getReturnType(), ParameterLoad.NONE);
                 }
 
                 for (Constructor constructor : aClass.getConstructors()) {
@@ -49,6 +51,8 @@ public class MRubyState {
             case RECURSIVE:
                 for (Method method : filterObjectMethods(aClass.getMethods())) {
                     for (Class parameter : method.getParameterTypes()) loadClass(parameter, ParameterLoad.RECURSIVE);
+
+                    loadClass(method.getReturnType(), ParameterLoad.RECURSIVE);
                 }
 
                 for (Constructor constructor : aClass.getConstructors()) {
